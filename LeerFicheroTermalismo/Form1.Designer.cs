@@ -161,6 +161,7 @@
             // 
             // button1
             // 
+            this.button1.ForeColor = System.Drawing.Color.Black;
             this.button1.Location = new System.Drawing.Point(367, 21);
             this.button1.Name = "button1";
             this.button1.Size = new System.Drawing.Size(139, 23);
@@ -181,6 +182,7 @@
             // 
             // button3
             // 
+            this.button3.ForeColor = System.Drawing.Color.Black;
             this.button3.Location = new System.Drawing.Point(36, 151);
             this.button3.Name = "button3";
             this.button3.Size = new System.Drawing.Size(75, 23);
@@ -208,6 +210,7 @@
             // 
             // button2
             // 
+            this.button2.ForeColor = System.Drawing.Color.Black;
             this.button2.Location = new System.Drawing.Point(36, 58);
             this.button2.Name = "button2";
             this.button2.Size = new System.Drawing.Size(118, 23);
@@ -634,16 +637,18 @@
             // 
             // button6
             // 
+            this.button6.ForeColor = System.Drawing.Color.Black;
             this.button6.Location = new System.Drawing.Point(6, 56);
             this.button6.Name = "button6";
             this.button6.Size = new System.Drawing.Size(559, 23);
             this.button6.TabIndex = 2;
-            this.button6.Text = "Tranformar";
+            this.button6.Text = "Trasformar";
             this.button6.UseVisualStyleBackColor = true;
             this.button6.Click += new System.EventHandler(this.button6_Click);
             // 
             // button5
             // 
+            this.button5.ForeColor = System.Drawing.Color.Black;
             this.button5.Location = new System.Drawing.Point(571, 30);
             this.button5.Name = "button5";
             this.button5.Size = new System.Drawing.Size(160, 23);
