@@ -556,6 +556,7 @@
             this.button4.TabIndex = 28;
             this.button4.Text = "Cambiar a no";
             this.button4.UseVisualStyleBackColor = true;
+            this.button4.Visible = false;
             this.button4.Click += new System.EventHandler(this.button4_Click);
             // 
             // textBox2
@@ -565,6 +566,7 @@
             this.textBox2.Name = "textBox2";
             this.textBox2.Size = new System.Drawing.Size(300, 20);
             this.textBox2.TabIndex = 29;
+            this.textBox2.Visible = false;
             // 
             // checkBox2
             // 
@@ -634,6 +636,7 @@
             this.groupBox1.TabIndex = 36;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Generalitat";
+            this.groupBox1.Visible = false;
             // 
             // button6
             // 
@@ -644,6 +647,7 @@
             this.button6.TabIndex = 2;
             this.button6.Text = "Trasformar";
             this.button6.UseVisualStyleBackColor = true;
+            this.button6.Visible = false;
             this.button6.Click += new System.EventHandler(this.button6_Click);
             // 
             // button5
@@ -655,6 +659,7 @@
             this.button5.TabIndex = 1;
             this.button5.Text = "Fichero";
             this.button5.UseVisualStyleBackColor = true;
+            this.button5.Visible = false;
             this.button5.Click += new System.EventHandler(this.button5_Click);
             // 
             // textBox4
@@ -735,7 +740,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.BackColor = System.Drawing.Color.DarkSlateBlue;
+            this.BackColor = System.Drawing.Color.Crimson;
             this.ClientSize = new System.Drawing.Size(1040, 699);
             this.Controls.Add(this.checkBox5);
             this.Controls.Add(this.tabControl1);
