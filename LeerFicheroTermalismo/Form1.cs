@@ -1,23 +1,17 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
-using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
-using System.Threading;
 using System.IO;
-using System.Data.SqlClient;
 using System.Configuration;
 using System.Collections;
-using System.Net;
-using System.Net.NetworkInformation;
 using System.Data.OleDb;
 using MySql.Data.MySqlClient;
-using MySql.Data;
 using System.Runtime.InteropServices;
-using Excel = Microsoft.Office.Interop.Excel; 
+using Excel = Microsoft.Office.Interop.Excel;
+using Sentry;
 
 namespace LeerFicheroTermalismo
 {
@@ -96,9 +90,10 @@ namespace LeerFicheroTermalismo
         {
 
 
+
            
 
-            // string cadena_conexion = this.Width = Properties.Settings.Default.Width; ;
+       
 
 
             this.Top = (Screen.PrimaryScreen.WorkingArea.Height - this.Height) / 2;
@@ -109,7 +104,7 @@ namespace LeerFicheroTermalismo
 
 
 
-            this.misfuncionesBDExpedientes = new BDsqlserver.functionsBD(System.Configuration.ConfigurationSettings.AppSettings["ConnectionStringExpedientes"]);
+            misfuncionesBDExpedientes = new BDsqlserver.functionsBD(new Utils().Decrypt(ConfigurationManager.AppSettings["ConnectionString"],"balneario"));
             llenar_combo_balnearios();
 
             DataColumn col1 = new DataColumn("fecha_entrada");
@@ -119,7 +114,7 @@ namespace LeerFicheroTermalismo
             mytableAI.Columns.Add(col1);
             mytableAI.Columns.Add(col2);
 
-            //this.WindowState = FormWindowState.Maximized;
+          
 
         }
 
@@ -281,7 +276,7 @@ namespace LeerFicheroTermalismo
             {
 
 
-             
+
                 IdAcompAci = 0;
                 IdSolicitanteAci = 0;
 
@@ -293,7 +288,7 @@ namespace LeerFicheroTermalismo
 
                 if (checkBox3.Checked == true)
                 {
-                   // MessageBox.Show(Convert.ToString(dr["NIF_SOLI"]));
+                    // MessageBox.Show(Convert.ToString(dr["NIF_SOLI"]));
                     parts[0] = Convert.ToString(DateTime.Now.Year + "/" + dr["EXPEDIENTE"]);
                     parts[1] = Convert.ToString(dr["NIF_SOLI"]);
                     parts[2] = Convert.ToString(dr["NOMBRE_SOLI"]);
@@ -343,11 +338,12 @@ namespace LeerFicheroTermalismo
                         }
 
                     }
-                    else {
+                    else
+                    {
 
                         parts[3] = "";
                         parts[4] = "";
-                    
+
                     }
 
 
@@ -389,7 +385,7 @@ namespace LeerFicheroTermalismo
 
 
                     parts[30] = Convert.ToString(dr["FECHAN_SOLI"]);
-                  
+
 
 
 
@@ -457,7 +453,7 @@ namespace LeerFicheroTermalismo
                     }
 
 
-                   // System.IO.Directory.CreateDirectory(textBox1.Text + @"\Advertencias" + mes_fichero + "_" + year_fichero);
+                    // System.IO.Directory.CreateDirectory(textBox1.Text + @"\Advertencias" + mes_fichero + "_" + year_fichero);
 
                 }
                 catch
@@ -477,7 +473,7 @@ namespace LeerFicheroTermalismo
                 fichero_advertencias += "###########################################################NifSol-" + parts[1].Trim() + "#################NifAcom-" + parts[3].Trim() + "#####################################################################################################################" + Environment.NewLine + Environment.NewLine;
 
 
-           
+
 
 
                 IdSolicitanteAci = ComprobarHuespedExiste(parts[1].Trim(), parts[2].Trim(), parts[19].Trim(), parts[17].Trim(), parts[18].Trim(), parts[16].Trim(), parts[12].Trim(), parts[13].Trim(), parts[7].Trim(), "Solicitante", nifformateadosolictante, parts[30].Trim(), parts[15].Trim());
@@ -510,7 +506,7 @@ namespace LeerFicheroTermalismo
 
                 lectura_fichero_nif += IdSolicitanteAci + ";" + parts[0].Trim() + ";" + nifformateadosolictante + ";" + parts[2].Trim() + ";" + nifformateadoconyuge + ";" + parts[4].Trim() + ";" + parts[5].Trim() + ";" + parts[6].Trim() + ";" + parts[7].Trim() + ";" + parts[8].Trim() + ";" + parts[9].Trim() + ";" + parts[10].Trim() + ";" + parts[11].Trim() + ";" + parts[12].Trim() + ";" + parts[13].Trim() + ";" + parts[14].Trim() + ";" + parts[15].Trim() + parts[16].Trim() + ";" + parts[17].Trim() + ";" + parts[18].Trim() + System.Environment.NewLine;
 
-               // MessageBox.Show(Convert.);
+                // MessageBox.Show(Convert.);
 
 
                 //Comprvamos que no existe un prereserva para esa convocatoria tanto par el solicitente como el acompañante
@@ -542,7 +538,7 @@ namespace LeerFicheroTermalismo
 
 
                 //Comprobamos que no exite Reserva para esa convocatoria tanto par el solicitente como el acompañante
-                if ((ExisteReserva(IdSolicitanteAci, parts, formatearnif(parts[1].Trim()), parts[1].Trim()) == 0) && (ExisteReserva(IdAcompAci, parts, formatearnif(parts[3].Trim()),parts[3].Trim()) == 0))
+                if ((ExisteReserva(IdSolicitanteAci, parts, formatearnif(parts[1].Trim()), parts[1].Trim()) == 0) && (ExisteReserva(IdAcompAci, parts, formatearnif(parts[3].Trim()), parts[3].Trim()) == 0))
                 {
 
                     if (InsertoPrereserva == true)
@@ -644,7 +640,23 @@ namespace LeerFicheroTermalismo
         {
 
 
+            try
+            {
+                this.countLinesFile();
+            }
+            catch (Exception err)
+            {
+                SentrySdk.CaptureException(err);
 
+            }
+
+
+
+        }
+
+
+        private void countLinesFile()
+        {
             //Leer linea
 
             string[] tempArray = textBox3.Lines;
@@ -663,11 +675,19 @@ namespace LeerFicheroTermalismo
 
                 if (this.checkBox4.Checked == true)
                 {
+                    try
+                    {
+                        LeerFilasExcel("Hoja1");
+                    }
+                    catch (Exception err)
+                    {
+                        SentrySdk.CaptureException(err);
 
-                    LeerFilasExcel("Hoja1");
+                    }
+
 
                 }
-               
+
 
 
 
@@ -732,15 +752,6 @@ namespace LeerFicheroTermalismo
 
 
             }
-
-
-
-
-
-
-
-
-
         }
 
         private void backgroundWorker1_ProgressChanged(object sender, ProgressChangedEventArgs e)
@@ -761,6 +772,26 @@ namespace LeerFicheroTermalismo
 
         private void backgroundWorker2_DoWork(object sender, System.ComponentModel.DoWorkEventArgs e)
         {
+            try
+            {
+                this.readFile();
+            }
+            catch (Exception err)
+            {
+                SentrySdk.CaptureException(err);
+
+            }
+
+
+
+
+
+        }
+
+        private void readFile()
+        {
+
+
 
             int counter = 0;
             int contador_ficheros = 0;
@@ -865,7 +896,7 @@ namespace LeerFicheroTermalismo
                         System.IO.StreamReader file = new System.IO.StreamReader(fichero);
                         while ((line = file.ReadLine()) != null)
                         {
-                           // MessageBox.Show(  );
+                            // MessageBox.Show(  );
                             IdAcompAci = 0;
                             IdSolicitanteAci = 0;
 
@@ -906,7 +937,7 @@ namespace LeerFicheroTermalismo
                                         System.IO.Directory.CreateDirectory(textBox1.Text + @"\AdvertenciasImserso_" + mes_fichero + "_" + year_fichero);
                                     }
 
-                                    
+
 
                                 }
                                 catch
@@ -925,12 +956,12 @@ namespace LeerFicheroTermalismo
                                 ojos_linea = false;
                                 fichero_advertencias += "###########################################################NifSol-" + parts[1].Trim() + "#################NifAcom-" + parts[3].Trim() + "#####################################################################################################################" + Environment.NewLine + Environment.NewLine;
 
-                               /* MessageBox.Show("13"+parts[13].Trim());
-                                MessageBox.Show("14" + parts[14].Trim());
-                                MessageBox.Show("15" + parts[15].Trim());
-                                MessageBox.Show("16" + parts[16].Trim());
-                                MessageBox.Show("17" + parts[17].Trim());
-                                MessageBox.Show("18" + parts[18].Trim());*/
+                                /* MessageBox.Show("13"+parts[13].Trim());
+                                 MessageBox.Show("14" + parts[14].Trim());
+                                 MessageBox.Show("15" + parts[15].Trim());
+                                 MessageBox.Show("16" + parts[16].Trim());
+                                 MessageBox.Show("17" + parts[17].Trim());
+                                 MessageBox.Show("18" + parts[18].Trim());*/
 
 
                                 IdSolicitanteAci = ComprobarHuespedExiste(parts[1].Trim(), parts[2].Trim(), parts[19].Trim(), parts[17].Trim(), parts[18].Trim(), parts[16].Trim(), parts[12].Trim(), parts[13].Trim(), parts[7].Trim(), "Solicitante", nifformateadosolictante, Convert.ToString(DateTime.Now), parts[15].Trim());
@@ -973,29 +1004,30 @@ namespace LeerFicheroTermalismo
 
                                     //MessageBox.Show(Convert.ToString(parts[5].Trim()));
 
-                                    if ( parts[5].Trim() == "C")
+                                    if (parts[5].Trim() == "C")
                                     {
 
-                                                    //El caso de que vienn dos comprobamos el acompañante que no tenga reserva
+                                        //El caso de que vienn dos comprobamos el acompañante que no tenga reserva
 
-                                                    if ((ExisteReserva(IdAcompAci, parts, formatearnif(parts[3].Trim()), parts[3].Trim()) == 0))
-                                                    {
+                                        if ((ExisteReserva(IdAcompAci, parts, formatearnif(parts[3].Trim()), parts[3].Trim()) == 0))
+                                        {
 
-                                                            InsertoPrereserva = true;
+                                            InsertoPrereserva = true;
 
 
 
-                                                    }
-                                                    else
-                                                    {
+                                        }
+                                        else
+                                        {
 
-                                                        InsertoPrereserva = false;
+                                            InsertoPrereserva = false;
 
-                                                    }
+                                        }
 
 
                                     }
-                                    else {
+                                    else
+                                    {
 
 
 
@@ -1008,29 +1040,31 @@ namespace LeerFicheroTermalismo
 
                                                 InsertoPrereserva = true;
                                             }
-                                            else {
+                                            else
+                                            {
 
 
-                                                  InsertoPrereserva = false;
-                                            
+                                                InsertoPrereserva = false;
+
                                             }
 
 
                                         }
-                                        else {
+                                        else
+                                        {
 
                                             InsertoPrereserva = true;
-                                        
-                                        
+
+
                                         }
 
 
 
-                                       
-                                    
+
+
                                     }
-                                    
-                                   
+
+
 
 
                                 }
@@ -1045,7 +1079,7 @@ namespace LeerFicheroTermalismo
 
 
                                 //Comprobamos que no exite Reserva para esa convocatoria tanto par el solicitente como el acompañante
-                                if ((ExistePrereserva(IdSolicitanteAci, parts, formatearnif(parts[1].Trim()), parts[1].Trim()) == 0) && InsertoPrereserva==true)
+                                if ((ExistePrereserva(IdSolicitanteAci, parts, formatearnif(parts[1].Trim()), parts[1].Trim()) == 0) && InsertoPrereserva == true)
                                 {
 
                                     if (parts[5].Trim() == "C")
@@ -1121,22 +1155,22 @@ namespace LeerFicheroTermalismo
 
 
 
-                                
+
 
 
 
 
                                 //Todos los ok para intersan estn bien
 
-                               
+
 
                                 if (InsertoPrereserva == true)
                                 {
 
-                                
-                                    
-                               // MessageBox.Show(Convert.ToString(InsertoPrereserva));
-                                 InsertarPrereserva(IdSolicitanteAci, IdAcompAci, parts, "");
+
+
+                                    // MessageBox.Show(Convert.ToString(InsertoPrereserva));
+                                    InsertarPrereserva(IdSolicitanteAci, IdAcompAci, parts, "");
 
                                 }
 
@@ -1177,12 +1211,13 @@ namespace LeerFicheroTermalismo
                             HuespedesNoEstanTVExcel(mes_fichero, year_fichero, nif_fichero_imserso_mes);
 
                         }
-                        else {
+                        else
+                        {
 
                             HuespedesNoEstanImsersoExcel(mes_fichero, year_fichero, nif_fichero_imserso_mes);
-                        
+
                         }
-                        
+
 
                         //inserto las advertencias
                         //insetar_advertencias_fichero(mes_fichero, year_fichero);
@@ -1217,17 +1252,6 @@ namespace LeerFicheroTermalismo
 
 
             }
-
-
-
-
-
-
-
-
-
-
-
 
         }
 
@@ -1296,10 +1320,6 @@ namespace LeerFicheroTermalismo
 
 
 
-        private void btnOpenFile_Click(object sender, System.EventArgs e)
-        {
-
-        }
 
         private void button1_Click(object sender, EventArgs e)
         {
@@ -1313,16 +1333,11 @@ namespace LeerFicheroTermalismo
 
         }
 
-        private void button2_Click(object sender, EventArgs e)
-        {
-
-        }
 
 
 
-
-        //Comprobamos si existe el huesped
-        public int ComprobarHuespedExiste(string nif, string hue_des_str, string hue_dom_str, string hue_pob_str, string hue_cp_str, string hue_prv_str, string telefono1, string telefono2, string fecha_turno, string tipo_nif, string nifsolictente, string fecha_nac_d,string mail)
+        
+        public int ComprobarHuespedExiste(string nif, string hue_des_str, string hue_dom_str, string hue_pob_str, string hue_cp_str, string hue_prv_str, string telefono1, string telefono2, string fecha_turno, string tipo_nif, string nifsolictente, string fecha_nac_d, string mail)
         {
 
 
@@ -1345,7 +1360,7 @@ namespace LeerFicheroTermalismo
             }
             /*FIn Buscamos el hue_guid si existe*/
 
-           
+
 
             /*En el caso de que no existe el huesped lo creamos*/
             if (HUE_GUID == 0)
@@ -1375,7 +1390,7 @@ namespace LeerFicheroTermalismo
 
 
 
-        //Insertamos el huesped 
+      
 
         public int InsertarHuespeded(string hue_des_str, string hue_dom_str, string hue_pob_str, string hue_cp_str, string hue_nif_str, string hue_prv_str, string telefono1, string telefono2, string fecha_turno, string tipo_nif, string nifsolictente, string fecha_nac, string email)
         {
@@ -1398,21 +1413,23 @@ namespace LeerFicheroTermalismo
                     fecha_nacimiento = fecha_bird.ToString(formato_datetime);
 
                 }
-                else {
+                else
+                {
 
                     fecha_nacimiento = "";
-                
-                
+
+
                 }
 
-               
+
 
             }
-            else {
+            else
+            {
 
 
                 fecha_nacimiento = "";
-            
+
             }
 
             Con_cod_lng = ObtnenerUltimoIdHuesped();
@@ -1460,20 +1477,21 @@ namespace LeerFicheroTermalismo
 
 
             }
-            else {
+            else
+            {
 
                 nombre_apellidos = hue_des_str.Replace("'", "''");
-            
-            
+
+
             }
 
-            nombre_apellidos = nombre_apellidos ;
+            nombre_apellidos = nombre_apellidos;
             //insertamos en la table huespedes
 
-            if (nombre_apellidos.Length>40)
+            if (nombre_apellidos.Length > 40)
             {
                 //MessageBox.Show(nombre_apellidos);
-            
+
             }
 
             //MessageBox.Show(System.Configuration.ConfigurationSettings.AppSettings["nacion_" + this.nacion]);
@@ -1486,14 +1504,15 @@ namespace LeerFicheroTermalismo
                 this.misfuncionesBD.insert("Huespedes", campos, values);
 
             }
-            catch {
+            catch
+            {
 
                 campos = "HUE_GUID,HUE_COD_str,hue_des_str,NAC_GUID,DIV_GUID,IDI_GUID,hue_co1_str,hue_co2_str,hue_fac_dat";
-                values = "'" + HUE_GUID + "','" + Con_cod_lng + "','','" + System.Configuration.ConfigurationSettings.AppSettings["nacion_"+this.nacion ] + "','2','2','','','" + fecha_acutal.ToString(formato_datetime) + "'";
+                values = "'" + HUE_GUID + "','" + Con_cod_lng + "','','" + System.Configuration.ConfigurationSettings.AppSettings["nacion_" + this.nacion] + "','2','2','','','" + fecha_acutal.ToString(formato_datetime) + "'";
                 this.misfuncionesBD.insert("Huespedes", campos, values);
-            
+
             }
-           
+
 
 
 
@@ -1504,8 +1523,8 @@ namespace LeerFicheroTermalismo
             //values = "'" + HUE_GUID + "','" + hue_dom_str.Replace("'", "''") + "','" + hue_pob_str.Replace("'", "''") + "','" + hue_cp_str + "','" + hue_nif_str + "','" + hue_prv_str + "','TranspasoImserso','" + fecha_nacimiento + "','" + email + "'";
             campos = "HUE_GUID,hue_dom_str,hue_pob_str,hue_cp_str,hue_nif_str,hue_prv_str,hue_pul_str,hue_mai_str";
             values = "'" + HUE_GUID + "','" + hue_dom_str.Replace("'", "''") + "','" + hue_pob_str.Replace("'", "''") + "','" + hue_cp_str + "','" + hue_nif_str + "','" + hue_prv_str + "','TranspasoImserso','" + email + "'";
-            
-            
+
+
             this.misfuncionesBD.insert("HuespedK", campos, values);
 
 
@@ -1653,7 +1672,7 @@ namespace LeerFicheroTermalismo
             }
 
 
-       
+
 
 
             //En funcion del tipo de turno asigno la fecha de salida
@@ -1693,12 +1712,13 @@ namespace LeerFicheroTermalismo
                 contrato = ObtenerContrato(Convert.ToDateTime(huesped[7].Trim()), "A (7 DIAS)", this.contrato_balneario);
 
             }
-            else {
+            else
+            {
 
                 //Otenemos el contrato
                 contrato = ObtenerContrato(Convert.ToDateTime(huesped[7].Trim()), huesped[8].Trim(), this.contrato_balneario);
-            
-            
+
+
             }
 
 
@@ -1766,15 +1786,18 @@ namespace LeerFicheroTermalismo
             string codigo_contrato = "";
 
 
-            if(!this.checkBox3.Checked){
+            if (!this.checkBox3.Checked)
+            {
 
 
                 codigo_contrato = obtener_codigo_contrato(contrato);
 
-            }else{
+            }
+            else
+            {
 
                 codigo_contrato = contrato;
-            
+
             }
 
 
@@ -1806,13 +1829,13 @@ namespace LeerFicheroTermalismo
 
 
             //obtnemos todas las advertencias que tiene el cliente
-            
+
             DataTable tabla_existe_advertenicias = new DataTable();
 
 
-           // this.misfuncionesBD.delete("AdvertenciaAsignadaReservas"," AAR_GUID ='"+RES_GUID+"');
-       /*Obtenemos el id del ultimo contador*/
-            tabla_existe_advertenicias = this.misfuncionesBD.obtenerDatable("SELECT  AdvertenciaAsignadas.ADV_GUID, AdvertenciaAsignadas.AAS_GUID, AdvertenciaAsignadas.AAS_tab_str, AdvertenciaAsignadas.AAS_obs_str  FROM  AdvertenciaAsignadas INNER JOIN HuespedK ON AdvertenciaAsignadas.AAS_GUID = HuespedK.HUE_GUID AND AdvertenciaAsignadas.AAS_tab_str = 'Huespedes' WHERE HuespedK.HUE_GUID='"+Convert.ToString(HUE_GUID)+"'");
+            // this.misfuncionesBD.delete("AdvertenciaAsignadaReservas"," AAR_GUID ='"+RES_GUID+"');
+            /*Obtenemos el id del ultimo contador*/
+            tabla_existe_advertenicias = this.misfuncionesBD.obtenerDatable("SELECT  AdvertenciaAsignadas.ADV_GUID, AdvertenciaAsignadas.AAS_GUID, AdvertenciaAsignadas.AAS_tab_str, AdvertenciaAsignadas.AAS_obs_str  FROM  AdvertenciaAsignadas INNER JOIN HuespedK ON AdvertenciaAsignadas.AAS_GUID = HuespedK.HUE_GUID AND AdvertenciaAsignadas.AAS_tab_str = 'Huespedes' WHERE HuespedK.HUE_GUID='" + Convert.ToString(HUE_GUID) + "'");
 
             foreach (DataRow dr in tabla_existe_advertenicias.Rows)
             {
@@ -1823,17 +1846,18 @@ namespace LeerFicheroTermalismo
                     this.misfuncionesBD.insert("AdvertenciaAsignadaReservas", "ADV_GUID,AAR_GUID,AAR_reg_bln,DEP_GUID,AAR_alk_bln,AAR_con_bln", "'" + Convert.ToInt32(dr["ADV_GUID"]) + "','" + RES_GUID + "','0','0','False','False'");
 
                 }
-                catch { 
-                
-                
+                catch
+                {
+
+
                 }
-                
+
                 //HUE_GUID = Convert.ToInt32(dr["MAXIMO"]) + 1;
             }
 
 
 
-          
+
 
 
 
@@ -1844,9 +1868,9 @@ namespace LeerFicheroTermalismo
             if (this.checkBox3.Checked)
             {
 
-               this.misfuncionesBD.update("PresReservas", "epr_GUID='" + this.epr_GUID_tv + "'", "RES_GUID=" + RES_GUID);
-               this.misfuncionesBD.delete("AdvertenciaAsignadaReservas", " AAR_GUID='" + RES_GUID + "' AND ADV_GUID='" + advr + "'");
-               this.misfuncionesBD.insert("AdvertenciaAsignadaReservas", "ADV_GUID,AAR_GUID,AAR_reg_bln,DEP_GUID,AAR_alk_bln,AAR_con_bln", "'" + advr + "','" + RES_GUID + "','0','0','False','False'");
+                this.misfuncionesBD.update("PresReservas", "epr_GUID='" + this.epr_GUID_tv + "'", "RES_GUID=" + RES_GUID);
+                this.misfuncionesBD.delete("AdvertenciaAsignadaReservas", " AAR_GUID='" + RES_GUID + "' AND ADV_GUID='" + advr + "'");
+                this.misfuncionesBD.insert("AdvertenciaAsignadaReservas", "ADV_GUID,AAR_GUID,AAR_reg_bln,DEP_GUID,AAR_alk_bln,AAR_con_bln", "'" + advr + "','" + RES_GUID + "','0','0','False','False'");
 
 
             }
@@ -2121,8 +2145,9 @@ namespace LeerFicheroTermalismo
                 expedienteACi = Convert.ToString(dr["res_DR_bon_str"]);
                 noalojados = Convert.ToString(dr["res_nal_bln"]);
 
-               // InsentarPacientesExcelAdvertencias(Convert.ToDateTime(huesped[7].Trim()), fechaReservaAci, " Prereserva ", Convert.ToString(IdAciHuesped), Convert.ToString(nif), Convert.ToString(nif_huesped_aci), Convert.ToString(RES_GUID), VectorExpedienteAnyo[1], estado, numerodeadultos, Convert.ToString(huesped[5].Trim()), formatearnif(nif_acomp_Aci), formatearnif(huesped[3].Trim()), tipoturno, diasestancia, expedienteACi, "", Convert.ToString(dr["age_nom_str"]), VectorExpedienteAnyo[1]);
-                if (!this.checkBox3.Checked) {
+                // InsentarPacientesExcelAdvertencias(Convert.ToDateTime(huesped[7].Trim()), fechaReservaAci, " Prereserva ", Convert.ToString(IdAciHuesped), Convert.ToString(nif), Convert.ToString(nif_huesped_aci), Convert.ToString(RES_GUID), VectorExpedienteAnyo[1], estado, numerodeadultos, Convert.ToString(huesped[5].Trim()), formatearnif(nif_acomp_Aci), formatearnif(huesped[3].Trim()), tipoturno, diasestancia, expedienteACi, "", Convert.ToString(dr["age_nom_str"]), VectorExpedienteAnyo[1]);
+                if (!this.checkBox3.Checked)
+                {
 
                     if (estado.ToUpper() == "NO")
                     {
@@ -2134,13 +2159,13 @@ namespace LeerFicheroTermalismo
 
                     }
                 }
-                
-               
-                
-                                    if (this.checkBox3.Checked)
-                    {
-                        InsentarPacientesExcelAdvertenciasTV(Convert.ToDateTime(huesped[7].Trim()), fechaReservaAci, " Prereserva ", Convert.ToString(IdAciHuesped), Convert.ToString(huesped[1].Trim()), Convert.ToString(nif_huesped_aci), Convert.ToString(RES_GUID), VectorExpedienteAnyo[1], estado, numerodeadultos, Convert.ToString(huesped[5].Trim()), formatearnif(nif_acomp_Aci), formatearnif(huesped[3].Trim()), tipoturno, diasestancia, expedienteACi, noalojados, Convert.ToString(dr["age_nom_str"]), VectorExpedienteAnyo[1], HUE_GUID, huesped, nif_huesped, nif_original, Convert.ToString(dr["edi_des_str"]), huesped[14].Trim());
-                    }
+
+
+
+                if (this.checkBox3.Checked)
+                {
+                    InsentarPacientesExcelAdvertenciasTV(Convert.ToDateTime(huesped[7].Trim()), fechaReservaAci, " Prereserva ", Convert.ToString(IdAciHuesped), Convert.ToString(huesped[1].Trim()), Convert.ToString(nif_huesped_aci), Convert.ToString(RES_GUID), VectorExpedienteAnyo[1], estado, numerodeadultos, Convert.ToString(huesped[5].Trim()), formatearnif(nif_acomp_Aci), formatearnif(huesped[3].Trim()), tipoturno, diasestancia, expedienteACi, noalojados, Convert.ToString(dr["age_nom_str"]), VectorExpedienteAnyo[1], HUE_GUID, huesped, nif_huesped, nif_original, Convert.ToString(dr["edi_des_str"]), huesped[14].Trim());
+                }
 
                 if (this.checkBox3.Checked)
                 {
@@ -2151,11 +2176,12 @@ namespace LeerFicheroTermalismo
                         this.misfuncionesBD.insert("AdvertenciaAsignadaReservas", "ADV_GUID,AAR_GUID,AAR_reg_bln,DEP_GUID,AAR_obs_str,AAR_alk_bln,AAR_con_bln", "'43','" + RES_GUID + "',0,0,' Plaza Adjudicada TV ',0,0");
 
                     }
-                    catch { 
-                    
-                    
+                    catch
+                    {
+
+
                     }
-                    
+
 
 
                 }
@@ -2185,18 +2211,18 @@ namespace LeerFicheroTermalismo
 
 
             string[] ExpedienteAno = huesped[0].Trim().Split(delimiters_re);
-            this.misfuncionesBD.update("PresReservas", "res_DR_bon_str='" + ExpedienteAno[1].Trim() + "'"," (len(res_DR_bon_str)=0  OR res_DR_bon_str IS NULL OR res_DR_bon_str='') AND RES_GUID=" + RES_GUID);
+            this.misfuncionesBD.update("PresReservas", "res_DR_bon_str='" + ExpedienteAno[1].Trim() + "'", " (len(res_DR_bon_str)=0  OR res_DR_bon_str IS NULL OR res_DR_bon_str='') AND RES_GUID=" + RES_GUID);
 
 
 
-           if (nif_original.Trim()=="")
+            if (nif_original.Trim() == "")
             {
 
-                   RES_GUID=0; 
+                RES_GUID = 0;
 
             }
 
-           
+
 
 
             return RES_GUID;
@@ -2210,7 +2236,7 @@ namespace LeerFicheroTermalismo
 
         //Existe prereserva para esa convocatoria
 
-        public int ExisteReserva(int HUE_GUID, string[] huesped, string nif_huesped,string nif_original)
+        public int ExisteReserva(int HUE_GUID, string[] huesped, string nif_huesped, string nif_original)
         {
 
             string nif = huesped[1].Trim();
@@ -2237,6 +2263,9 @@ namespace LeerFicheroTermalismo
 
             int RES_GUID = 0;
             DataTable tabla_existe_registro = new DataTable();
+
+            DateTime start = Convert.ToDateTime(VectotConvocatorias[0]);
+            DateTime end = Convert.ToDateTime(VectotConvocatorias[0]);
 
             // lectura_fichero += System.Environment.NewLine + "SELECT RES_GUID FROM [PresReservas] WHERE HUE_GUID='" + Convert.ToString(HUE_GUID) + "' AND res_ent_dat between  convert(datetime, '" + Convert.ToDateTime(VectotConvocatorias[0]).ToString("dd/MM/yyyy") + "') AND  convert(datetime, '" + Convert.ToDateTime(VectotConvocatorias[1]).ToString("dd/MM/yyyy") + "')" + System.Environment.NewLine; 
 
@@ -2281,7 +2310,7 @@ namespace LeerFicheroTermalismo
             else
             {
 
-                sql = "SELECT edi_des_str,age_nom_str,res_nal_bln,res_DR_bon_str,DateDiff(day, res_ent_dat, res_sal_dat) as DiferenciaDias,res_spe_adu_int,[Reservas].RES_GUID,HuespedK.HUE_GUID,ReservaAcompanantes.HUE_GUID as acomp,hue_nif_str,res_ent_dat,CASE res_est_int WHEN 0 THEN 'Reserva' WHEN 2 THEN 'Checkin/Checkout' WHEN 3 THEN 'No Show' WHEN 4 THEN 'Anulada' ELSE '' END AS Estado FROM [Reservas] INNER JOIN HuespedK ON HuespedK.HUE_GUID = Reservas.HUE_GUID LEFT  JOIN ReservaAcompanantes ON  ReservaAcompanantes.RES_GUID = Reservas.RES_GUID INNER JOIN Agencias ON  Agencias.AGE_GUID = Reservas.AGE_GUID  LEFT JOIN Edificios ON Edificios.EDI_GUID  = Reservas.EDI_GUID  WHERE  Reservas.AGE_GUID='" + this.agencia_balneario + "'  AND (  HuespedK.hue_nif_str='" + Convert.ToString(nif_huesped) + "' AND res_ent_dat between '" + Convert.ToDateTime(VectotConvocatorias[0]).ToString(formato_datetime) + "' AND   '" + Convert.ToDateTime(VectotConvocatorias[1]).ToString(formato_datetime) + "') OR  (res_ent_dat between '" + Convert.ToDateTime("01/01/" + DateTime.Now.Year).ToString(formato_datetime) + "' AND   '" + Convert.ToDateTime("01/12/" + DateTime.Now.Year).ToString(formato_datetime) + "' AND  res_DR_bon_str='" + VectorExpedienteAnyo[1] + "' )  ";
+                sql = "SELECT edi_des_str,age_nom_str,res_nal_bln,res_DR_bon_str,DateDiff(day, res_ent_dat, res_sal_dat) as DiferenciaDias,res_spe_adu_int,[Reservas].RES_GUID,HuespedK.HUE_GUID,ReservaAcompanantes.HUE_GUID as acomp,hue_nif_str,res_ent_dat,CASE res_est_int WHEN 0 THEN 'Reserva' WHEN 2 THEN 'Checkin/Checkout' WHEN 3 THEN 'No Show' WHEN 4 THEN 'Anulada' ELSE '' END AS Estado FROM [Reservas] INNER JOIN HuespedK ON HuespedK.HUE_GUID = Reservas.HUE_GUID LEFT  JOIN ReservaAcompanantes ON  ReservaAcompanantes.RES_GUID = Reservas.RES_GUID INNER JOIN Agencias ON  Agencias.AGE_GUID = Reservas.AGE_GUID  LEFT JOIN Edificios ON Edificios.EDI_GUID  = Reservas.EDI_GUID  WHERE  Reservas.AGE_GUID='" + this.agencia_balneario + "'  AND (  HuespedK.hue_nif_str='" + Convert.ToString(nif_huesped) + "' AND res_ent_dat between '" + start.ToString(formato_datetime) + "' AND   '" + end.ToString(formato_datetime) + "') OR  (res_ent_dat between '" + Convert.ToDateTime("01/01/" + DateTime.Now.Year).ToString(formato_datetime) + "' AND   '" + Convert.ToDateTime("01/12/" + DateTime.Now.Year).ToString(formato_datetime) + "' AND  res_DR_bon_str='" + VectorExpedienteAnyo[1] + "' )  ";
 
 
             }
@@ -2323,15 +2352,18 @@ namespace LeerFicheroTermalismo
                 diasestancia = Convert.ToString(dr["DiferenciaDias"]);
                 expedienteACi = Convert.ToString(dr["res_DR_bon_str"]);
 
-                if (this.checkBox3.Checked){
-                
+                if (this.checkBox3.Checked)
+                {
+
                     InsentarPacientesExcelAdvertenciasTV(Convert.ToDateTime(huesped[7].Trim()), fechaReservaAci, "Reserva", Convert.ToString(IdAciHuesped), Convert.ToString(huesped[1].Trim()), Convert.ToString(nif_huesped_aci), Convert.ToString(RES_GUID), VectorExpedienteAnyo[1], estado, numerodeadultos, Convert.ToString(huesped[5].Trim()), formatearnif(nif_acomp_Aci), formatearnif(huesped[3].Trim()), tipoturno, diasestancia, expedienteACi, noalojados, Convert.ToString(dr["age_nom_str"]), VectorExpedienteAnyo[1], HUE_GUID, huesped, nif_huesped, nif_original, Convert.ToString(dr["edi_des_str"]), huesped[14].Trim());
-                
-                }else{
+
+                }
+                else
+                {
 
                     InsentarPacientesExcelAdvertencias(Convert.ToDateTime(huesped[7].Trim()), fechaReservaAci, "Reserva", Convert.ToString(IdAciHuesped), Convert.ToString(huesped[1].Trim()), Convert.ToString(nif_huesped_aci), Convert.ToString(RES_GUID), VectorExpedienteAnyo[1], estado, numerodeadultos, Convert.ToString(huesped[5].Trim()), formatearnif(nif_acomp_Aci), formatearnif(huesped[3].Trim()), tipoturno, diasestancia, expedienteACi, noalojados, Convert.ToString(dr["age_nom_str"]), VectorExpedienteAnyo[1], HUE_GUID, huesped, nif_huesped, nif_original, Convert.ToString(dr["edi_des_str"]));
                 }
-               
+
 
 
 
@@ -2369,14 +2401,15 @@ namespace LeerFicheroTermalismo
 
 
 
-           string[] ExpedienteAno_R = huesped[0].Trim().Split(delimiters_re);
-           this.misfuncionesBD.update("Reservas", "res_DR_bon_str='" + ExpedienteAno_R[1].Trim() + "'", " (len(res_DR_bon_str)=0  OR res_DR_bon_str IS NULL OR res_DR_bon_str='') AND RES_GUID=" + RES_GUID);
+            string[] ExpedienteAno_R = huesped[0].Trim().Split(delimiters_re);
+            this.misfuncionesBD.update("Reservas", "res_DR_bon_str='" + ExpedienteAno_R[1].Trim() + "'", " (len(res_DR_bon_str)=0  OR res_DR_bon_str IS NULL OR res_DR_bon_str='') AND RES_GUID=" + RES_GUID);
 
 
-           if(nif_original.Trim()==""){
+            if (nif_original.Trim() == "")
+            {
 
-               RES_GUID = 0;
-            
+                RES_GUID = 0;
+
             }
 
 
@@ -2538,13 +2571,28 @@ namespace LeerFicheroTermalismo
 
         private void button3_Click(object sender, EventArgs e)
         {
-            // Start the BackgroundWorker.
-            // MessageBox.Show(Convert.ToString(comboBox1.SelectedItem));
-            //MessageBox.Show(Convert.ToString(comboBox1.SelectedValue));
-            //
+
+            try
+            {
+                this.ExtractData();
+            }
+            catch (Exception err)
+            {
+                SentrySdk.CaptureException(err);
+
+                MessageBox.Show("Se ha producido un error");
+                this.Close();
+
+            }
 
 
 
+
+        }
+
+
+        private void ExtractData()
+        {
 
             this.id_balneario_seleccionado = Convert.ToString(this.comboBox1.SelectedValue);
 
@@ -2653,6 +2701,7 @@ namespace LeerFicheroTermalismo
             }
 
         }
+
 
         private void button2_Click_1(object sender, EventArgs e)
         {
@@ -2767,13 +2816,14 @@ namespace LeerFicheroTermalismo
                 curFile = textBox1.Text + @"\AdvertenciasTV_" + Convert.ToString(FechaImserso.Year) + "\\Advertencias_" + fecha_actual_strg + ".xls";
 
             }
-            else {
+            else
+            {
 
 
                 curFile = textBox1.Text + @"\AdvertenciasImserso_" + mesfichero + "_" + anyofichero + "\\Advertencias_" + fecha_actual_strg + ".xls";
             }
 
-            
+
 
             if (!File.Exists(curFile))
             {
@@ -2884,14 +2934,496 @@ namespace LeerFicheroTermalismo
             sql += ",'" + advertencia + "'";
 
 
-            /*advertencia = "NO";
-            if ((numeroadultos == "1" && plazassolicitadas == "C") || (numeroadultos == "2" && plazassolicitadas == "B") || (numeroadultos == "2" && plazassolicitadas == "A"))
+
+
+
+
+            string nif = huesped[1].Trim();
+            string rango_convocatorias = "";
+
+
+
+
+            nif = formatearnif(nif);
+            char[] delimiters = new char[] { '-' };
+            rango_convocatorias = ObtenerRangoConvocatoria(Convert.ToDateTime(huesped[7].Trim()));
+            string[] VectotConvocatorias = rango_convocatorias.Split(delimiters);
+
+            char[] delimiters_expediente = new char[] { '/' };
+            string[] VectorExpedienteAnyo = Convert.ToString(huesped[0].Trim()).Split(delimiters_expediente);
+
+
+            DataTable tabla_existe_registro = new DataTable();
+            DataSet miDataset = new DataSet();
+
+            string sql_reserva = "";
+
+
+
+
+            advertencia = "NO";
+            if (estado == "Anulada")
+            {
+
+
+                //Tenemos que comprobar que no tenga una reserva en estado RESERVA O  CHECK
+
+
+                if (this.checkBox3.Checked)
+                {
+
+
+
+
+                    sql_reserva = "SELECT age_nom_str,res_nal_bln,res_DR_bon_str,DateDiff(day, res_ent_dat, res_sal_dat) as DiferenciaDias,res_spe_adu_int,[Reservas].RES_GUID,HuespedK.HUE_GUID,ReservaAcompanantes.HUE_GUID as acomp,hue_nif_str,res_ent_dat,CASE res_est_int WHEN 0 THEN 'Reserva' WHEN 2 THEN 'Checkin/Checkout' WHEN 3 THEN 'No Show' WHEN 4 THEN 'Anulada' ELSE '' END AS Estado FROM [Reservas] INNER JOIN HuespedK ON HuespedK.HUE_GUID = Reservas.HUE_GUID LEFT  JOIN ReservaAcompanantes ON  ReservaAcompanantes.RES_GUID = Reservas.RES_GUID INNER JOIN Agencias ON  Agencias.AGE_GUID = Reservas.AGE_GUID    WHERE  Reservas.AGE_GUID='" + this.agencia_balneario + "'  AND res_est_int  IN (0,2) AND HuespedK.hue_nif_str='" + Convert.ToString(nif_huesped) + "' AND  CTA_GUID IN ('" + System.Configuration.ConfigurationSettings.AppSettings["contrato_baja_tv"] + "') ";
+
+
+
+
+
+                }
+                else
+                {
+
+                    sql_reserva = "SELECT age_nom_str,res_nal_bln,res_DR_bon_str,DateDiff(day, res_ent_dat, res_sal_dat) as DiferenciaDias,res_spe_adu_int,[Reservas].RES_GUID,HuespedK.HUE_GUID,ReservaAcompanantes.HUE_GUID as acomp,hue_nif_str,res_ent_dat,CASE res_est_int WHEN 0 THEN 'Reserva' WHEN 2 THEN 'Checkin/Checkout' WHEN 3 THEN 'No Show' WHEN 4 THEN 'Anulada' ELSE '' END AS Estado FROM [Reservas] INNER JOIN HuespedK ON HuespedK.HUE_GUID = Reservas.HUE_GUID LEFT  JOIN ReservaAcompanantes ON  ReservaAcompanantes.RES_GUID = Reservas.RES_GUID INNER JOIN Agencias ON  Agencias.AGE_GUID = Reservas.AGE_GUID  WHERE  Reservas.AGE_GUID='" + this.agencia_balneario + "'   AND  res_est_int IN (0,2) AND HuespedK.hue_nif_str='" + Convert.ToString(nif_huesped) + "' AND res_ent_dat between '" + Convert.ToDateTime(VectotConvocatorias[0]).ToString(formato_datetime) + "' AND   '" + Convert.ToDateTime(VectotConvocatorias[1]).ToString(formato_datetime) + "' ";
+
+
+                }
+
+
+                miDataset = this.misfuncionesBD.obtenerDataSet(sql_reserva);
+                tabla_existe_registro = miDataset.Tables[0];
+                bool reserva_ok = false;
+                foreach (DataRow dr in tabla_existe_registro.Rows)
+                {
+
+                    reserva_ok = true;
+                    DateTime fecha_reserva_ok = Convert.ToDateTime(dr["res_ent_dat"]);
+                    diasestancia = Convert.ToString(dr["DiferenciaDias"]);
+                    FechaAci = Convert.ToDateTime(dr["res_ent_dat"]);
+
+                }
+
+                if (!reserva_ok)
+                {
+                    advertencia = "SI";
+                    advertencia_ok = true;
+
+
+                }
+
+
+
+
+            }
+            sql += ",'" + advertencia + "'";
+
+
+            advertencia = "NO";
+            if ((diasestancia.Trim() == "11" && tipoturno.Trim() != "B (12 DIAS)") || ((diasestancia.Trim() == "9" && tipoturno.Trim() != "A (10 DIAS)")) || (diasestancia.Trim() == "7" && tipoturno.Trim() != "A (7 DIAS)"))
             {
                 advertencia = "SI";
                 advertencia_ok = true;
 
             }
-            sql += ",'" + advertencia + "'";*/
+            sql += ",'" + advertencia + "'";
+
+
+
+
+
+            advertencia = "NO";
+            if (plazassolicitadas == "C")
+            {
+                if (formatearnif(nif_acomp_Aci.Trim()) != formatearnif(nif_acomp_imserso.Trim()))
+                {
+                    advertencia = "SI";
+                    advertencia_ok = true;
+                }
+
+            }
+            sql += ",'" + advertencia + "'";
+
+
+
+
+
+
+
+
+
+            tabla_existe_registro = new DataTable();
+
+
+            string sql_prererva = "";
+
+            // MessageBox.Show(estado.Trim());
+
+            if (this.checkBox3.Checked)
+            {
+
+                //sql = "SELECT age_nom_str,res_DR_bon_str,DateDiff(day, res_ent_dat, res_sal_dat) as DiferenciaDias,res_spe_adu_int,[PresReservas].RES_GUID,HuespedK.HUE_GUID,PresReservaAcompanantes.HUE_GUID as acomp,hue_nif_str,res_ent_dat,PreReservaEstados.epr_des_str as Estado,prr_est_byt FROM PresReservas INNER JOIN  PreReservaEstados ON PreReservaEstados.epr_GUID=PresReservas.epr_GUID INNER JOIN HuespedK ON HuespedK.HUE_GUID = PresReservas.HUE_GUID LEFT  JOIN  PresReservaAcompanantes ON  PresReservaAcompanantes.RES_GUID = PresReservas.RES_GUID   INNER JOIN Agencias ON  Agencias.AGE_GUID = PresReservas.AGE_GUID  WHERE  PresReservas.AGE_GUID='" + this.agencia_balneario + "' AND HuespedK.hue_nif_str='" + Convert.ToString(nif_huesped) + "' AND (res_ent_dat between '" + Convert.ToDateTime("01/01/" + Convert.ToDateTime(VectotConvocatorias[1]).Year).ToString(formato_datetime) + "' AND   '" + Convert.ToDateTime("31/12/" + Convert.ToDateTime(VectotConvocatorias[1]).Year).ToString(formato_datetime) + "' AND  res_DR_bon_str='" + VectorExpedienteAnyo[1] + "' ) ";
+                sql_prererva = "SELECT age_nom_str,res_DR_bon_str,DateDiff(day, res_ent_dat, res_sal_dat) as DiferenciaDias,res_spe_adu_int,[PresReservas].RES_GUID,HuespedK.HUE_GUID,PresReservaAcompanantes.HUE_GUID as acomp,hue_nif_str,res_ent_dat,PreReservaEstados.epr_des_str as Estado,prr_est_byt FROM PresReservas INNER JOIN  PreReservaEstados ON PreReservaEstados.epr_GUID=PresReservas.epr_GUID INNER JOIN HuespedK ON HuespedK.HUE_GUID = PresReservas.HUE_GUID LEFT  JOIN  PresReservaAcompanantes ON  PresReservaAcompanantes.RES_GUID = PresReservas.RES_GUID   INNER JOIN Agencias ON  Agencias.AGE_GUID = PresReservas.AGE_GUID  WHERE  PresReservas.AGE_GUID='" + this.agencia_balneario + "' AND HuespedK.hue_nif_str='" + Convert.ToString(nif_huesped) + "' AND (res_ent_dat between '" + Convert.ToDateTime("01/01/" + Convert.ToDateTime(VectotConvocatorias[1]).Year).ToString(formato_datetime) + "' AND   '" + Convert.ToDateTime("31/12/" + Convert.ToDateTime(VectotConvocatorias[1]).Year).ToString(formato_datetime) + "'  ) ";
+
+            }
+            else
+            {
+
+                sql_prererva = "SELECT age_nom_str,res_DR_bon_str,DateDiff(day, res_ent_dat, res_sal_dat) as DiferenciaDias,res_spe_adu_int,[PresReservas].RES_GUID,HuespedK.HUE_GUID,PresReservaAcompanantes.HUE_GUID as acomp,hue_nif_str,res_ent_dat,PreReservaEstados.epr_des_str as Estado,prr_est_byt FROM PresReservas INNER JOIN  PreReservaEstados ON PreReservaEstados.epr_GUID=PresReservas.epr_GUID INNER JOIN HuespedK ON HuespedK.HUE_GUID = PresReservas.HUE_GUID LEFT  JOIN  PresReservaAcompanantes ON  PresReservaAcompanantes.RES_GUID = PresReservas.RES_GUID   INNER JOIN Agencias ON  Agencias.AGE_GUID = PresReservas.AGE_GUID  WHERE PresReservas.AGE_GUID='" + this.agencia_balneario + "' AND (HuespedK.hue_nif_str='" + Convert.ToString(nif_huesped) + "' AND res_ent_dat between '" + Convert.ToDateTime(VectotConvocatorias[0]).ToString(formato_datetime) + "' AND   '" + Convert.ToDateTime(VectotConvocatorias[1]).ToString(formato_datetime) + "')  OR (res_ent_dat between '" + Convert.ToDateTime("01/01/" + DateTime.Now.Year).ToString(formato_datetime) + "' AND   '" + Convert.ToDateTime("31/12/" + DateTime.Now.Year).ToString(formato_datetime) + "' AND  res_DR_bon_str='" + VectorExpedienteAnyo[1] + "' ) ";
+
+
+            }
+
+            miDataset = this.misfuncionesBD.obtenerDataSet(sql_prererva);
+            tabla_existe_registro = miDataset.Tables[0];
+            bool prereserva_ok = false;
+            foreach (DataRow dr in tabla_existe_registro.Rows)
+            {
+
+
+                prereserva_ok = true;
+                estado = Convert.ToString(dr["Estado"]);
+
+            }
+
+
+
+
+
+            advertencia = "NO";
+
+            if (estado.ToUpper() == "NO")
+            {
+
+                advertencia = "SI";
+                advertencia_ok = true;
+
+            }
+            sql += ",'" + advertencia + "'";
+
+
+
+
+
+            // MessageBox.Show(estado.Trim());
+
+
+
+            //Comprobamos si nombre titular es compuesto
+            char[] delimiters_nombre = new char[] { ' ' };
+            string[] array_nombre = Convert.ToString(huesped[2].Trim()).Split(delimiters_nombre);
+            advertencia = "NO";
+
+
+            if (array_nombre.Length > 3)
+            {
+
+                advertencia = "SI";
+                advertencia_ok = true;
+
+            }
+            sql += ",'" + advertencia + "'";
+
+
+
+            // MessageBox.Show(huesped[30]);
+
+
+            //Comprobamos si la fecha nacimiento titular
+            advertencia = "NO";
+
+            if (!CheckBird(Convert.ToString(nif_huesped)))
+            {
+
+                advertencia = "SI";
+                advertencia_ok = true;
+            }
+
+
+
+            sql += ",'" + advertencia + "'";
+
+
+
+            //Comprobamos si nombre acompañente
+
+            advertencia = "NO";
+            array_nombre = Convert.ToString(huesped[4].Trim()).Split(delimiters_nombre);
+
+
+            if (plazassolicitadas == "C")
+            {
+                if (array_nombre.Length > 3)
+                {
+
+                    advertencia = "SI";
+                    advertencia_ok = true;
+
+                }
+            }
+
+            sql += ",'" + advertencia + "'";
+
+
+
+            advertencia = "NO";
+
+            //Comprobamos si la fecha nacimiento acompañente
+            if (plazassolicitadas == "C")
+            {
+                /*try
+                {
+                    Convert.ToDateTime(huesped[31]);
+                    
+                }
+                catch
+                {
+
+                    advertencia = "SI";
+                    advertencia_ok = true;
+                }*/
+
+
+                if (!CheckBird(Convert.ToString(nif_acomp_imserso)))
+                {
+
+                    advertencia = "SI";
+                    advertencia_ok = true;
+                }
+
+
+
+
+            }
+
+
+
+
+            sql += ",'" + advertencia + "'";
+
+
+
+            //Temporada 
+
+            if (this.checkBox3.Checked)
+            {
+
+                advertencia = "NO";
+
+                string[] temporada_baja = { "1", "2", "3", "4", "5", "6", "7", "11", "12" };
+                string[] temporada_alta = { "8", "9", "10" };
+
+                if (tempora_tv == "B" && temporada_alta.Contains(mes_entrada))
+                {
+
+                    advertencia = "SI";
+
+                }
+
+
+                if (tempora_tv == "A" && temporada_baja.Contains(mes_entrada))
+                {
+
+                    advertencia = "SI";
+
+                }
+
+                /* if (estado.ToUpper() == "NO")
+                 {
+
+                     advertencia = "SI";
+                     advertencia_ok = true;
+
+                 }*/
+                sql += ",'" + advertencia + "'";
+
+
+
+            }
+            else
+            {
+
+                advertencia = "NO";
+
+            }
+
+
+
+
+
+
+
+
+
+
+            sql += ")";
+
+
+
+            if (advertencia_ok)
+            {
+
+                // MessageBox.Show(advertencia_ok.ToString());
+
+                System.Data.OleDb.OleDbConnection MyConnection;
+                System.Data.OleDb.OleDbCommand myCommand = new System.Data.OleDb.OleDbCommand();
+
+                MyConnection = new System.Data.OleDb.OleDbConnection("Provider=Microsoft.ACE.OLEDB.12.0;Data Source=" + curFile + ";Extended Properties=Excel 12.0;");
+                MyConnection.Open();
+                myCommand.Connection = MyConnection;
+
+                myCommand.CommandText = sql;
+                myCommand.ExecuteNonQuery();
+                MyConnection.Close();
+            }
+
+
+
+
+
+
+        }
+
+        public void InsentarPacientesExcelAdvertencias(DateTime FechaImserso, DateTime FechaAci, string Tabla, string IdHuespedAci, string NifSolictenteImnserso, string NifHuespedAci, string IdRererva, string Expediente, string estado, string numeroadultos, string plazassolicitadas, string nif_acomp_Aci, string nif_acomp_imserso, string tipoturno, string diasestancia, string expedienteACi, string noalojados, string AgenciaBalneario, string res_bon_str, int HUE_GUID, string[] huesped, string nif_huesped, string nif_original, string edi_des_str)
+        {
+            string mesfichero = Convert.ToString(FechaImserso.Month);
+            string anyofichero = Convert.ToString(FechaImserso.Year);
+            string no_alojados_advertencias = "";
+
+            Excel.Application xlApp = new Microsoft.Office.Interop.Excel.Application();
+
+            if (this.checkBox3.Checked)
+            {
+                curFile = textBox1.Text + @"\AdvertenciasTV_" + Convert.ToString(FechaImserso.Year) + "\\Advertencias_" + fecha_actual_strg + ".xls";
+
+            }
+            else
+            {
+
+
+                curFile = textBox1.Text + @"\AdvertenciasImserso_" + mesfichero + "_" + anyofichero + "\\Advertencias_" + fecha_actual_strg + ".xls";
+            }
+
+
+
+            if (!File.Exists(curFile))
+            {
+
+
+
+                Excel.Workbook xlWorkBook;
+                Excel.Worksheet xlWorkSheet;
+                object misValue = System.Reflection.Missing.Value;
+
+                xlWorkBook = xlApp.Workbooks.Add(misValue);
+                xlWorkSheet = (Excel.Worksheet)xlWorkBook.Worksheets.get_Item(1);
+
+                xlWorkSheet.Cells[1, 1] = "NifSol_ACI";
+                xlWorkSheet.Cells[1, 2] = "NifSol_IMSERSO";
+                xlWorkSheet.Cells[1, 3] = "NifAcom_ACI";
+                xlWorkSheet.Cells[1, 4] = "NifAcom_IMSERSO";
+                xlWorkSheet.Cells[1, 5] = "Expediente";
+                xlWorkSheet.Cells[1, 6] = "Tipo";
+                xlWorkSheet.Cells[1, 7] = "RESERVA";
+                xlWorkSheet.Cells[1, 8] = "ADULTOS";
+                xlWorkSheet.Cells[1, 9] = "AGENCIA";
+                xlWorkSheet.Cells[1, 10] = "ESTADO";
+                xlWorkSheet.Cells[1, 11] = "ENTRADA_ACI";
+                xlWorkSheet.Cells[1, 12] = "ENTRADA_IMSERSO";
+                xlWorkSheet.Cells[1, 13] = "Solicitud";
+                xlWorkSheet.Cells[1, 14] = "DIAS_ESTANCIA";
+                xlWorkSheet.Cells[1, 15] = "TURNO_IMSERSO";
+                xlWorkSheet.Cells[1, 16] = "Diferente_NIF_Titular";
+                xlWorkSheet.Cells[1, 17] = "Plazas_Diferentes";
+                xlWorkSheet.Cells[1, 18] = "Reserva_Anulada";
+                xlWorkSheet.Cells[1, 19] = "Dias_Estancia_Diferentes";
+                xlWorkSheet.Cells[1, 20] = "Diferente_NIF_Acompañante";
+                xlWorkSheet.Cells[1, 21] = "Fecha_Entrada_Diferente";
+                xlWorkSheet.Cells[1, 22] = "Prereserva_Estado_No";
+                xlWorkSheet.Cells[1, 23] = "Comprobar_Nombre_Apellidos_Titular";
+                xlWorkSheet.Cells[1, 24] = "Fecha_Nacimiento_Erronea_Titular";
+                xlWorkSheet.Cells[1, 25] = "Comprobar_Nombre_Apellidos_Acompanate";
+                xlWorkSheet.Cells[1, 26] = "Fecha_Nacimiento_Erronea_Acompanate";
+                xlWorkSheet.Cells[1, 27] = "Balneario";
+                xlWorkSheet.Cells[1, 28] = "Hotel";
+
+
+                // xlWorkSheet.Cells[1, 17] = "OBSERVACION";
+
+                //MessageBox.Show(curFile);
+                xlWorkBook.SaveAs(curFile, Excel.XlFileFormat.xlWorkbookNormal, misValue, misValue, misValue, misValue, Excel.XlSaveAsAccessMode.xlExclusive, misValue, misValue, misValue, misValue, misValue);
+                xlWorkBook.Close(true, misValue, misValue);
+                xlApp.Quit();
+
+                Marshal.ReleaseComObject(xlWorkSheet);
+                Marshal.ReleaseComObject(xlWorkBook);
+                Marshal.ReleaseComObject(xlApp);
+
+
+                //MessageBox.Show("No existe");
+            }
+            else
+            {
+
+                //MessageBox.Show("existe");
+
+
+            }
+
+
+            this.fichero_advertencias = "";
+
+            string sql = "";
+
+
+
+
+
+            CAMPOS_excel_fichero = "NifSol_ACI,NifSol_IMSERSO,NifAcom_ACI,NifAcom_IMSERSO,Expediente,Tipo,RESERVA,ADULTOS,AGENCIA,ESTADO,ENTRADA_ACI,ENTRADA_IMSERSO,Solicitud,DIAS_ESTANCIA,TURNO_IMSERSO,Balneario,Hotel,Diferente_NIF_Titular,Plazas_Diferentes,Reserva_Anulada,Dias_Estancia_Diferentes,Diferente_NIF_Acompañante,Fecha_Entrada_Diferente,Prereserva_Estado_No,Comprobar_Nombre_Apellidos_Titular,Fecha_Nacimiento_Erronea_Titular,Comprobar_Nombre_Apellidos_Acompanate,Fecha_Nacimiento_Erronea_Acompanate";
+
+
+            sql = "Insert into [Hoja1$] (" + CAMPOS_excel_fichero + ") values('" + NifHuespedAci.Trim() + "','" + formatearnif(NifSolictenteImnserso.Trim()) + "','" + nif_acomp_Aci.Trim() + "','" + formatearnif(nif_acomp_imserso.Trim()) + "','" + Expediente.Trim() + "','" + Tabla.Trim() + "','" + IdRererva.Trim() + "','" + numeroadultos.Trim() + "','" + AgenciaBalneario.Trim() + "','" + estado.Trim() + "','" + FechaAci.ToString("dd/MM/yyyy") + "','" + FechaImserso.ToString("dd/MM/yyyy") + "','" + plazassolicitadas + "'," + diasestancia.Trim() + ",'" + tipoturno + "','" + this.destino_FINAL + "','" + edi_des_str + "'";
+
+
+            bool advertencia_ok = false;
+
+
+            string advertencia = "NO";
+            if (formatearnif(NifSolictenteImnserso.Trim()) != formatearnif(NifHuespedAci.Trim()))
+            {
+                if (plazassolicitadas != "B")
+                {
+                    advertencia = "SI";
+                    advertencia_ok = true;
+                }
+                else
+                {
+
+
+                    if (formatearnif(nif_acomp_imserso.Trim()) != formatearnif(NifHuespedAci.Trim()))
+                    {
+
+
+                        advertencia = "SI";
+                        advertencia_ok = true;
+
+                    }
+
+
+                }
+            }
+            sql += ",'" + advertencia + "'";
+
+
+            advertencia = "NO";
+            if ((numeroadultos == "1" && plazassolicitadas == "C") || (numeroadultos == "2" && plazassolicitadas == "B") || (numeroadultos == "2" && plazassolicitadas == "A"))
+
+            {
+                advertencia = "SI";
+                advertencia_ok = true;
+
+            }
+            sql += ",'" + advertencia + "'";
 
 
 
@@ -3009,7 +3541,7 @@ namespace LeerFicheroTermalismo
 
 
 
-            /*advertencia = "NO";
+            advertencia = "NO";
             if (FechaImserso.CompareTo(FechaAci) != 0)
             {
 
@@ -3018,7 +3550,7 @@ namespace LeerFicheroTermalismo
 
 
             }
-            sql += ",'" + advertencia + "'";*/
+            sql += ",'" + advertencia + "'";
 
 
 
@@ -3089,10 +3621,6 @@ namespace LeerFicheroTermalismo
             }
             sql += ",'" + advertencia + "'";
 
-
-
-
-         
             // MessageBox.Show(estado.Trim());
 
 
@@ -3191,55 +3719,6 @@ namespace LeerFicheroTermalismo
 
 
 
-            //Temporada 
-
-            if (this.checkBox3.Checked)
-            {
-
-                advertencia = "NO";
-
-                string[] temporada_baja = { "1", "2", "3", "4", "5", "6", "7", "11", "12" };
-                string[] temporada_alta = { "8", "9", "10" };
-
-                if (tempora_tv=="B" && temporada_alta.Contains(mes_entrada))
-                {
-
-                    advertencia = "SI";
-
-                }
-
-
-                if (tempora_tv == "A" && temporada_baja.Contains(mes_entrada))
-                {
-
-                    advertencia = "SI";
-
-                }
-
-                /* if (estado.ToUpper() == "NO")
-                 {
-
-                     advertencia = "SI";
-                     advertencia_ok = true;
-
-                 }*/
-                sql += ",'" + advertencia + "'";
-
-
-
-            }
-            else
-            {
-
-                advertencia = "NO";
-
-            }
-
-          
-
-
-
-
 
 
 
@@ -3272,471 +3751,6 @@ namespace LeerFicheroTermalismo
 
         }
 
-        public void InsentarPacientesExcelAdvertencias(DateTime FechaImserso, DateTime FechaAci, string Tabla, string IdHuespedAci, string NifSolictenteImnserso, string NifHuespedAci, string IdRererva, string Expediente, string estado, string numeroadultos, string plazassolicitadas, string nif_acomp_Aci, string nif_acomp_imserso, string tipoturno, string diasestancia, string expedienteACi, string noalojados, string AgenciaBalneario, string res_bon_str, int HUE_GUID, string[] huesped, string nif_huesped, string nif_original, string edi_des_str)
-        {
-            string mesfichero = Convert.ToString(FechaImserso.Month);
-            string anyofichero = Convert.ToString(FechaImserso.Year);
-            string no_alojados_advertencias = "";
-
-            Excel.Application xlApp = new Microsoft.Office.Interop.Excel.Application();
-            
-            if (this.checkBox3.Checked)
-            {
-                curFile = textBox1.Text + @"\AdvertenciasTV_" + Convert.ToString(FechaImserso.Year) + "\\Advertencias_" + fecha_actual_strg + ".xls";
-
-            }
-            else
-            {
-
-
-                curFile = textBox1.Text + @"\AdvertenciasImserso_" + mesfichero + "_" + anyofichero + "\\Advertencias_" + fecha_actual_strg + ".xls";
-            }
-
-               
-
-            if (!File.Exists(curFile))
-            {
-
-
-
-                Excel.Workbook xlWorkBook;
-                Excel.Worksheet xlWorkSheet;
-                object misValue = System.Reflection.Missing.Value;
-
-                xlWorkBook = xlApp.Workbooks.Add(misValue);
-                xlWorkSheet = (Excel.Worksheet)xlWorkBook.Worksheets.get_Item(1);
-
-                xlWorkSheet.Cells[1, 1] = "NifSol_ACI";
-                xlWorkSheet.Cells[1, 2] = "NifSol_IMSERSO";
-                xlWorkSheet.Cells[1, 3] = "NifAcom_ACI";
-                xlWorkSheet.Cells[1, 4] = "NifAcom_IMSERSO";
-                xlWorkSheet.Cells[1, 5] = "Expediente";
-                xlWorkSheet.Cells[1, 6] = "Tipo";
-                xlWorkSheet.Cells[1, 7] = "RESERVA";
-                xlWorkSheet.Cells[1, 8] = "ADULTOS";
-                xlWorkSheet.Cells[1, 9] = "AGENCIA";
-                xlWorkSheet.Cells[1, 10] = "ESTADO";
-                xlWorkSheet.Cells[1, 11] = "ENTRADA_ACI";
-                xlWorkSheet.Cells[1, 12] = "ENTRADA_IMSERSO";
-                xlWorkSheet.Cells[1, 13] = "Solicitud";
-                xlWorkSheet.Cells[1, 14] = "DIAS_ESTANCIA";
-                xlWorkSheet.Cells[1, 15] = "TURNO_IMSERSO";
-                xlWorkSheet.Cells[1, 16] = "Diferente_NIF_Titular";
-                xlWorkSheet.Cells[1, 17] = "Plazas_Diferentes";
-                xlWorkSheet.Cells[1, 18] = "Reserva_Anulada";
-                xlWorkSheet.Cells[1, 19] = "Dias_Estancia_Diferentes";
-                xlWorkSheet.Cells[1, 20] = "Diferente_NIF_Acompañante";
-                xlWorkSheet.Cells[1, 21] = "Fecha_Entrada_Diferente";
-                xlWorkSheet.Cells[1, 22] = "Prereserva_Estado_No";
-                xlWorkSheet.Cells[1, 23] = "Comprobar_Nombre_Apellidos_Titular";
-                xlWorkSheet.Cells[1, 24] = "Fecha_Nacimiento_Erronea_Titular";
-                xlWorkSheet.Cells[1, 25] = "Comprobar_Nombre_Apellidos_Acompanate";
-                xlWorkSheet.Cells[1, 26] = "Fecha_Nacimiento_Erronea_Acompanate";
-                xlWorkSheet.Cells[1, 27] = "Balneario";
-                xlWorkSheet.Cells[1, 28] = "Hotel";
-                
-                
-               // xlWorkSheet.Cells[1, 17] = "OBSERVACION";
-
-                //MessageBox.Show(curFile);
-                xlWorkBook.SaveAs(curFile, Excel.XlFileFormat.xlWorkbookNormal, misValue, misValue, misValue, misValue, Excel.XlSaveAsAccessMode.xlExclusive, misValue, misValue, misValue, misValue, misValue);
-                xlWorkBook.Close(true, misValue, misValue);
-                xlApp.Quit();
-
-                Marshal.ReleaseComObject(xlWorkSheet);
-                Marshal.ReleaseComObject(xlWorkBook);
-                Marshal.ReleaseComObject(xlApp);
-
-
-                //MessageBox.Show("No existe");
-            }
-            else
-            {
-
-                //MessageBox.Show("existe");
-
-
-            }
-
-
-            this.fichero_advertencias = "";
-
-            string sql = "";
-
-
-
-
-
-            CAMPOS_excel_fichero = "NifSol_ACI,NifSol_IMSERSO,NifAcom_ACI,NifAcom_IMSERSO,Expediente,Tipo,RESERVA,ADULTOS,AGENCIA,ESTADO,ENTRADA_ACI,ENTRADA_IMSERSO,Solicitud,DIAS_ESTANCIA,TURNO_IMSERSO,Balneario,Hotel,Diferente_NIF_Titular,Plazas_Diferentes,Reserva_Anulada,Dias_Estancia_Diferentes,Diferente_NIF_Acompañante,Fecha_Entrada_Diferente,Prereserva_Estado_No,Comprobar_Nombre_Apellidos_Titular,Fecha_Nacimiento_Erronea_Titular,Comprobar_Nombre_Apellidos_Acompanate,Fecha_Nacimiento_Erronea_Acompanate";
-
-
-            sql = "Insert into [Hoja1$] (" + CAMPOS_excel_fichero + ") values('" + NifHuespedAci.Trim() + "','" + formatearnif(NifSolictenteImnserso.Trim()) + "','" + nif_acomp_Aci.Trim() + "','" + formatearnif(nif_acomp_imserso.Trim()) + "','" + Expediente.Trim() + "','" + Tabla.Trim() + "','" + IdRererva.Trim() + "','" + numeroadultos.Trim() + "','" + AgenciaBalneario.Trim() + "','" + estado.Trim() + "','" + FechaAci.ToString("dd/MM/yyyy") + "','" + FechaImserso.ToString("dd/MM/yyyy") + "','" + plazassolicitadas + "'," + diasestancia.Trim() + ",'" + tipoturno + "','" + this.destino_FINAL + "','" + edi_des_str + "'";
-
-
-            bool advertencia_ok = false;
-            
-            
-            string advertencia = "NO";
-            if (formatearnif(NifSolictenteImnserso.Trim()) != formatearnif(NifHuespedAci.Trim()))
-            {
-                if (plazassolicitadas != "B")
-                {
-                    advertencia = "SI";
-                    advertencia_ok = true;
-                }
-                else {
-
-
-                    if (formatearnif(nif_acomp_imserso.Trim()) != formatearnif(NifHuespedAci.Trim()))
-                    {
-
-
-                         advertencia = "SI";
-                        advertencia_ok = true;
-                    
-                    }
-                
-                
-                }
-            }
-            sql += ",'" + advertencia + "'";
-
-
-            advertencia = "NO";
-            if ((numeroadultos == "1" && plazassolicitadas == "C") || (numeroadultos == "2" && plazassolicitadas == "B") || (numeroadultos == "2" && plazassolicitadas == "A") )
-            
-            {
-                advertencia = "SI";
-                advertencia_ok = true;
-                
-            }
-            sql += ",'" + advertencia + "'";
-
-
-
-
-            ///COmprobamos si tiene la prereserva e estado NO
-
-
-
-            string nif = huesped[1].Trim();
-            string rango_convocatorias = "";
-
-            //string expedienteACi = "";
-     
-
-
-            nif = formatearnif(nif);
-            char[] delimiters = new char[] { '-' };
-            rango_convocatorias = ObtenerRangoConvocatoria(Convert.ToDateTime(huesped[7].Trim()));
-            string[] VectotConvocatorias = rango_convocatorias.Split(delimiters);
-
-            char[] delimiters_expediente = new char[] { '/' };
-            string[] VectorExpedienteAnyo = Convert.ToString(huesped[0].Trim()).Split(delimiters_expediente);
-
-
-            DataTable tabla_existe_registro = new DataTable();
-            DataSet miDataset = new DataSet();
-
-            string sql_reserva = "";
-
-
-
-
-            advertencia = "NO";
-            if (estado == "Anulada")
-            {
-
-
-                //Tenemos que comprobar que no tenga una reserva en estado RESERVA O  CHECK
-
-
-                if (this.checkBox3.Checked)
-                {
-
-
-
-
-                    sql_reserva = "SELECT age_nom_str,res_nal_bln,res_DR_bon_str,DateDiff(day, res_ent_dat, res_sal_dat) as DiferenciaDias,res_spe_adu_int,[Reservas].RES_GUID,HuespedK.HUE_GUID,ReservaAcompanantes.HUE_GUID as acomp,hue_nif_str,res_ent_dat,CASE res_est_int WHEN 0 THEN 'Reserva' WHEN 2 THEN 'Checkin/Checkout' WHEN 3 THEN 'No Show' WHEN 4 THEN 'Anulada' ELSE '' END AS Estado FROM [Reservas] INNER JOIN HuespedK ON HuespedK.HUE_GUID = Reservas.HUE_GUID LEFT  JOIN ReservaAcompanantes ON  ReservaAcompanantes.RES_GUID = Reservas.RES_GUID INNER JOIN Agencias ON  Agencias.AGE_GUID = Reservas.AGE_GUID    WHERE  Reservas.AGE_GUID='" + this.agencia_balneario + "'  AND res_est_int  IN (0,2) AND HuespedK.hue_nif_str='" + Convert.ToString(nif_huesped) + "' AND  CTA_GUID IN ('" + System.Configuration.ConfigurationSettings.AppSettings["contrato_baja_tv"] + "') ";
-
-
-
-
-
-                }
-                else
-                {
-
-                    sql_reserva = "SELECT age_nom_str,res_nal_bln,res_DR_bon_str,DateDiff(day, res_ent_dat, res_sal_dat) as DiferenciaDias,res_spe_adu_int,[Reservas].RES_GUID,HuespedK.HUE_GUID,ReservaAcompanantes.HUE_GUID as acomp,hue_nif_str,res_ent_dat,CASE res_est_int WHEN 0 THEN 'Reserva' WHEN 2 THEN 'Checkin/Checkout' WHEN 3 THEN 'No Show' WHEN 4 THEN 'Anulada' ELSE '' END AS Estado FROM [Reservas] INNER JOIN HuespedK ON HuespedK.HUE_GUID = Reservas.HUE_GUID LEFT  JOIN ReservaAcompanantes ON  ReservaAcompanantes.RES_GUID = Reservas.RES_GUID INNER JOIN Agencias ON  Agencias.AGE_GUID = Reservas.AGE_GUID  WHERE  Reservas.AGE_GUID='" + this.agencia_balneario + "'   AND  res_est_int IN (0,2) AND HuespedK.hue_nif_str='" + Convert.ToString(nif_huesped) + "' AND res_ent_dat between '" + Convert.ToDateTime(VectotConvocatorias[0]).ToString(formato_datetime) + "' AND   '" + Convert.ToDateTime(VectotConvocatorias[1]).ToString(formato_datetime) + "' ";
-
-
-                }
-
-
-                miDataset = this.misfuncionesBD.obtenerDataSet(sql_reserva);
-                tabla_existe_registro = miDataset.Tables[0];
-                bool reserva_ok = false;
-                foreach (DataRow dr in tabla_existe_registro.Rows)
-                {
-
-                    reserva_ok = true;
-                    DateTime fecha_reserva_ok = Convert.ToDateTime(dr["res_ent_dat"]);
-                    diasestancia = Convert.ToString(dr["DiferenciaDias"]);
-                    FechaAci = Convert.ToDateTime(dr["res_ent_dat"]);
-
-                }
-
-                if (!reserva_ok)
-                {
-                    advertencia = "SI";
-                    advertencia_ok = true;
-                
-                
-                }
-               
-
-
-
-            }
-            sql += ",'" + advertencia + "'";
-
-
-            advertencia = "NO";
-            if ((diasestancia.Trim() == "11" && tipoturno.Trim() != "B (12 DIAS)") || ((diasestancia.Trim() == "9" && tipoturno.Trim() != "A (10 DIAS)"))   || (diasestancia.Trim() == "7" && tipoturno.Trim() != "A (7 DIAS)")  )
-            {
-                advertencia = "SI";
-                advertencia_ok = true;
-
-            }
-            sql += ",'" + advertencia + "'";
-            
-
-
-                
-
-            advertencia = "NO";
-            if (plazassolicitadas == "C")
-            {
-                if (formatearnif(nif_acomp_Aci.Trim()) != formatearnif(nif_acomp_imserso.Trim()))
-                {
-                    advertencia = "SI";
-                    advertencia_ok = true;
-                }
-
-            }
-            sql += ",'" + advertencia + "'";
-
-
-            
-            advertencia = "NO";
-            if (FechaImserso.CompareTo(FechaAci) != 0)
-            {
-                
-                    advertencia = "SI";
-                    advertencia_ok = true;
-                
-
-            }
-            sql += ",'" + advertencia + "'";
-
-
-
-            ///COmprobamos si tiene la prereserva e estado NO
-
-
-
-           
-
-
-            tabla_existe_registro = new DataTable();
-
-            
-            string sql_prererva = "";
-
-           // MessageBox.Show(estado.Trim());
-
-            if (this.checkBox3.Checked)
-            {
-
-                //sql = "SELECT age_nom_str,res_DR_bon_str,DateDiff(day, res_ent_dat, res_sal_dat) as DiferenciaDias,res_spe_adu_int,[PresReservas].RES_GUID,HuespedK.HUE_GUID,PresReservaAcompanantes.HUE_GUID as acomp,hue_nif_str,res_ent_dat,PreReservaEstados.epr_des_str as Estado,prr_est_byt FROM PresReservas INNER JOIN  PreReservaEstados ON PreReservaEstados.epr_GUID=PresReservas.epr_GUID INNER JOIN HuespedK ON HuespedK.HUE_GUID = PresReservas.HUE_GUID LEFT  JOIN  PresReservaAcompanantes ON  PresReservaAcompanantes.RES_GUID = PresReservas.RES_GUID   INNER JOIN Agencias ON  Agencias.AGE_GUID = PresReservas.AGE_GUID  WHERE  PresReservas.AGE_GUID='" + this.agencia_balneario + "' AND HuespedK.hue_nif_str='" + Convert.ToString(nif_huesped) + "' AND (res_ent_dat between '" + Convert.ToDateTime("01/01/" + Convert.ToDateTime(VectotConvocatorias[1]).Year).ToString(formato_datetime) + "' AND   '" + Convert.ToDateTime("31/12/" + Convert.ToDateTime(VectotConvocatorias[1]).Year).ToString(formato_datetime) + "' AND  res_DR_bon_str='" + VectorExpedienteAnyo[1] + "' ) ";
-                sql_prererva = "SELECT age_nom_str,res_DR_bon_str,DateDiff(day, res_ent_dat, res_sal_dat) as DiferenciaDias,res_spe_adu_int,[PresReservas].RES_GUID,HuespedK.HUE_GUID,PresReservaAcompanantes.HUE_GUID as acomp,hue_nif_str,res_ent_dat,PreReservaEstados.epr_des_str as Estado,prr_est_byt FROM PresReservas INNER JOIN  PreReservaEstados ON PreReservaEstados.epr_GUID=PresReservas.epr_GUID INNER JOIN HuespedK ON HuespedK.HUE_GUID = PresReservas.HUE_GUID LEFT  JOIN  PresReservaAcompanantes ON  PresReservaAcompanantes.RES_GUID = PresReservas.RES_GUID   INNER JOIN Agencias ON  Agencias.AGE_GUID = PresReservas.AGE_GUID  WHERE  PresReservas.AGE_GUID='" + this.agencia_balneario + "' AND HuespedK.hue_nif_str='" + Convert.ToString(nif_huesped) + "' AND (res_ent_dat between '" + Convert.ToDateTime("01/01/" + Convert.ToDateTime(VectotConvocatorias[1]).Year).ToString(formato_datetime) + "' AND   '" + Convert.ToDateTime("31/12/" + Convert.ToDateTime(VectotConvocatorias[1]).Year).ToString(formato_datetime) + "'  ) ";
-
-            }
-            else
-            {
-
-                sql_prererva = "SELECT age_nom_str,res_DR_bon_str,DateDiff(day, res_ent_dat, res_sal_dat) as DiferenciaDias,res_spe_adu_int,[PresReservas].RES_GUID,HuespedK.HUE_GUID,PresReservaAcompanantes.HUE_GUID as acomp,hue_nif_str,res_ent_dat,PreReservaEstados.epr_des_str as Estado,prr_est_byt FROM PresReservas INNER JOIN  PreReservaEstados ON PreReservaEstados.epr_GUID=PresReservas.epr_GUID INNER JOIN HuespedK ON HuespedK.HUE_GUID = PresReservas.HUE_GUID LEFT  JOIN  PresReservaAcompanantes ON  PresReservaAcompanantes.RES_GUID = PresReservas.RES_GUID   INNER JOIN Agencias ON  Agencias.AGE_GUID = PresReservas.AGE_GUID  WHERE PresReservas.AGE_GUID='" + this.agencia_balneario + "' AND (HuespedK.hue_nif_str='" + Convert.ToString(nif_huesped) + "' AND res_ent_dat between '" + Convert.ToDateTime(VectotConvocatorias[0]).ToString(formato_datetime) + "' AND   '" + Convert.ToDateTime(VectotConvocatorias[1]).ToString(formato_datetime) + "')  OR (res_ent_dat between '" + Convert.ToDateTime("01/01/" + DateTime.Now.Year).ToString(formato_datetime) + "' AND   '" + Convert.ToDateTime("31/12/" + DateTime.Now.Year).ToString(formato_datetime) + "' AND  res_DR_bon_str='" + VectorExpedienteAnyo[1] + "' ) ";
-
-
-            }
-
-            miDataset = this.misfuncionesBD.obtenerDataSet(sql_prererva);
-            tabla_existe_registro = miDataset.Tables[0];
-            bool prereserva_ok = false;
-            foreach (DataRow dr in tabla_existe_registro.Rows)
-            {
-
-
-                prereserva_ok = true;
-                estado = Convert.ToString(dr["Estado"]);
-
-            }
-
-
-
-           /* advertencia = "NO";
-
-            if (!prereserva_ok)
-            {
-
-                advertencia = "SI";
-                advertencia_ok = true;
-
-            }
-            sql += ",'" + advertencia + "'";*/
-
-
-
-            advertencia = "NO";
-
-            if (estado.ToUpper() == "NO")
-            {
-
-                advertencia = "SI";
-                advertencia_ok = true;
-
-            }
-            sql += ",'" + advertencia + "'";
-
-           // MessageBox.Show(estado.Trim());
-
-
-
-            //Comprobamos si nombre titular es compuesto
-            char[] delimiters_nombre= new char[] { ' ' };
-            string[] array_nombre = Convert.ToString(huesped[2].Trim()).Split(delimiters_nombre);
-            advertencia = "NO";
-
-           
-            if (array_nombre.Length > 3)
-            {
-
-                advertencia = "SI";
-                advertencia_ok = true;
-
-            }
-            sql += ",'" + advertencia + "'";
-
-
-
-           // MessageBox.Show(huesped[30]);
-
-
-            //Comprobamos si la fecha nacimiento titular
-            advertencia = "NO";
-
-            if (!CheckBird(Convert.ToString(nif_huesped)))
-            {
-            
-                advertencia = "SI";
-                advertencia_ok = true;
-            }
-
-
-
-            sql += ",'" + advertencia + "'";
-
-
-
-            //Comprobamos si nombre acompañente
-
-            advertencia = "NO";
-            array_nombre = Convert.ToString(huesped[4].Trim()).Split(delimiters_nombre);
-
-            
-            if (plazassolicitadas == "C")
-            {
-                if (array_nombre.Length > 3)
-                {
-
-                    advertencia = "SI";
-                    advertencia_ok = true;
-
-                }
-            }
-
-            sql += ",'" + advertencia + "'";
-
-
-
-            advertencia = "NO";
-
-            //Comprobamos si la fecha nacimiento acompañente
-            if (plazassolicitadas == "C")
-            {
-                /*try
-                {
-                    Convert.ToDateTime(huesped[31]);
-                    
-                }
-                catch
-                {
-
-                    advertencia = "SI";
-                    advertencia_ok = true;
-                }*/
-
-
-                   if (!CheckBird(Convert.ToString(nif_acomp_imserso)))
-                    {
-            
-                        advertencia = "SI";
-                        advertencia_ok = true;
-                    }
-
-
-
-
-            }
-            
-
-
-
-            sql += ",'" + advertencia + "'";
-
-
-
-
-
-
-
-            sql +=")";
-           
-            
-
-             if(advertencia_ok){
-
-                // MessageBox.Show(advertencia_ok.ToString());
-
-                 System.Data.OleDb.OleDbConnection MyConnection;
-                 System.Data.OleDb.OleDbCommand myCommand = new System.Data.OleDb.OleDbCommand();
-
-                 MyConnection = new System.Data.OleDb.OleDbConnection("Provider=Microsoft.ACE.OLEDB.12.0;Data Source=" + curFile + ";Extended Properties=Excel 12.0;");
-                 MyConnection.Open();
-                 myCommand.Connection = MyConnection;
-
-                 myCommand.CommandText = sql;
-                 myCommand.ExecuteNonQuery();
-                 MyConnection.Close();
-             }
-            
-
-
-            
-
-
-        }
-
 
 
 
@@ -3752,7 +3766,7 @@ namespace LeerFicheroTermalismo
             string no_alojados_advertencias = "";
 
             Excel.Application xlApp = new Microsoft.Office.Interop.Excel.Application();
-            
+
             string curFile = textBox1.Text + @"\Advertencias" + mesfichero + "_" + anyofichero + "\\Advertencias_" + fecha_actual_strg + ".xls";
 
             if (!File.Exists(curFile))
@@ -3792,40 +3806,42 @@ namespace LeerFicheroTermalismo
                 Marshal.ReleaseComObject(xlWorkSheet);
                 Marshal.ReleaseComObject(xlWorkBook);
                 Marshal.ReleaseComObject(xlApp);
-                
-               
+
+
                 //MessageBox.Show("No existe");
             }
-            else {
+            else
+            {
 
                 //MessageBox.Show("existe");
-               
-            
+
+
             }
 
 
-                 this.fichero_advertencias = "";
+            this.fichero_advertencias = "";
 
 
-                System.Data.OleDb.OleDbConnection MyConnection;
-                System.Data.OleDb.OleDbCommand myCommand = new System.Data.OleDb.OleDbCommand();
-                string sql = null;
-                MyConnection = new System.Data.OleDb.OleDbConnection("Provider=Microsoft.ACE.OLEDB.12.0;Data Source=" + curFile + ";Extended Properties=Excel 12.0;");
-                MyConnection.Open();
-                myCommand.Connection = MyConnection;
+            System.Data.OleDb.OleDbConnection MyConnection;
+            System.Data.OleDb.OleDbCommand myCommand = new System.Data.OleDb.OleDbCommand();
+            string sql = null;
+            MyConnection = new System.Data.OleDb.OleDbConnection("Provider=Microsoft.ACE.OLEDB.12.0;Data Source=" + curFile + ";Extended Properties=Excel 12.0;");
+            MyConnection.Open();
+            myCommand.Connection = MyConnection;
 
 
 
-                string CAMPOS = "NifSol_ACI,NifSol_IMSERSO,NifAcom_ACI,NifAcom_IMSERSO,Expediente,Tipo,RESERVA,ADULTOS,AGENCIA,ESTADO,ENTRADA_ACI,ENTRADA_IMSERSO,Solicitud,DIAS_ESTANCIA,TURNO_IMSERSO,TIPO_ADVERTENCIA,OBSERVACION";
-                string TIPO_ADVERTENCIA = "";
+            string CAMPOS = "NifSol_ACI,NifSol_IMSERSO,NifAcom_ACI,NifAcom_IMSERSO,Expediente,Tipo,RESERVA,ADULTOS,AGENCIA,ESTADO,ENTRADA_ACI,ENTRADA_IMSERSO,Solicitud,DIAS_ESTANCIA,TURNO_IMSERSO,TIPO_ADVERTENCIA,OBSERVACION";
+            string TIPO_ADVERTENCIA = "";
 
 
-            bool  ok_prereserva = false;
+            bool ok_prereserva = false;
 
-            if(Tabla=="Prereserva"){
+            if (Tabla == "Prereserva")
+            {
 
                 ok_prereserva = true;
-            
+
             }
 
 
@@ -3849,8 +3865,8 @@ namespace LeerFicheroTermalismo
 
 
 
-               
-                fichero_advertencias = "Este expediente " + Expediente + " existe una " + Tabla + " " + IdRererva + no_alojados_advertencias + "  en estado " + estado + "  de la Agencia " + AgenciaBalneario + " con diferentes NIF en Aci y " + institucion + " nif de solicitente " + formatearnif(NifSolictenteImnserso.Trim()) + " y nif en Aci " + formatearnif(NifHuespedAci.Trim()) + " para esta fecha " + FechaImserso.ToString("dd/MM/yyyy") ;
+
+                fichero_advertencias = "Este expediente " + Expediente + " existe una " + Tabla + " " + IdRererva + no_alojados_advertencias + "  en estado " + estado + "  de la Agencia " + AgenciaBalneario + " con diferentes NIF en Aci y " + institucion + " nif de solicitente " + formatearnif(NifSolictenteImnserso.Trim()) + " y nif en Aci " + formatearnif(NifHuespedAci.Trim()) + " para esta fecha " + FechaImserso.ToString("dd/MM/yyyy");
 
 
                 if (fichero_advertencias.Length >= 252)
@@ -3860,7 +3876,7 @@ namespace LeerFicheroTermalismo
 
                 TIPO_ADVERTENCIA = "Distinto Nifs Titular";
                 sql = "Insert into [Hoja1$] (" + CAMPOS + ") values('" + NifHuespedAci.Trim() + "','" + formatearnif(NifSolictenteImnserso.Trim()) + "','" + nif_acomp_Aci.Trim() + "','" + formatearnif(nif_acomp_imserso.Trim()) + "','" + Expediente.Trim() + "','" + Tabla.Trim() + "','" + IdRererva.Trim() + "','" + numeroadultos.Trim() + "','" + AgenciaBalneario.Trim() + "','" + estado.Trim() + "','" + FechaAci.ToString("dd/MM/yyyy") + "','" + FechaImserso.ToString("dd/MM/yyyy") + "','" + plazassolicitadas + "'," + diasestancia.Trim() + ",'" + tipoturno + "','" + TIPO_ADVERTENCIA + "','" + fichero_advertencias + "')";
-                
+
 
                 //SOlo hacemos esto cuando la tabla es de
 
@@ -3868,12 +3884,12 @@ namespace LeerFicheroTermalismo
                 {
                     myCommand.CommandText = sql;
                     myCommand.ExecuteNonQuery();
-                
-                
+
+
                 }
-                
-               // MyConnection.Close();
-          
+
+                // MyConnection.Close();
+
 
 
                 if (expedienteACi == Expediente)
@@ -3906,7 +3922,7 @@ namespace LeerFicheroTermalismo
                     }
                     //MyConnection.Close();
 
-                    
+
                     ojos_linea = true;
 
                 }
@@ -3923,7 +3939,7 @@ namespace LeerFicheroTermalismo
 
 
 
-               
+
                 fichero_advertencias = "Este expediente " + Expediente + " existe una " + Tabla + " " + IdRererva + no_alojados_advertencias + " en estado " + estado + "  de la Agencia " + AgenciaBalneario + " con un numero de adultos " + numeroadultos + " dierentes a la solicitud " + plazassolicitadas + Environment.NewLine + Environment.NewLine;
                 ojos_linea = true;
 
@@ -3935,7 +3951,7 @@ namespace LeerFicheroTermalismo
 
                 //fichero_advertencias = "OJO ---->Este expediente " + Expediente + " existe una " + Tabla + " " + IdRererva + no_alojados_advertencias + "  en estado " + estado + "  de la Agencia " + AgenciaBalneario + " con diferentes NIF en Aci y " + institucion + "  nif de solicitente " + formatearnif(NifSolictenteImnserso.Trim()) + " y nif en Aci " + formatearnif(NifHuespedAci.Trim()) + " para esta fecha " + FechaImserso.ToString("dd/MM/yyyy") + Environment.NewLine + Environment.NewLine;
 
-               TIPO_ADVERTENCIA = "Plazas Diferentes";
+                TIPO_ADVERTENCIA = "Plazas Diferentes";
                 sql = "Insert into [Hoja1$] (" + CAMPOS + ") values('" + NifHuespedAci.Trim() + "','" + formatearnif(NifSolictenteImnserso.Trim()) + "','" + nif_acomp_Aci.Trim() + "','" + formatearnif(nif_acomp_imserso.Trim()) + "','" + Expediente.Trim() + "','" + Tabla.Trim() + "','" + IdRererva.Trim() + "','" + numeroadultos.Trim() + "','" + AgenciaBalneario.Trim() + "','" + estado.Trim() + "','" + FechaAci.ToString("dd/MM/yyyy") + "','" + FechaImserso.ToString("dd/MM/yyyy") + "','" + plazassolicitadas + "'," + diasestancia.Trim() + ",'" + tipoturno + "','" + TIPO_ADVERTENCIA + "','" + fichero_advertencias + "')";
 
                 if (!ok_prereserva)
@@ -4015,7 +4031,7 @@ namespace LeerFicheroTermalismo
             if (estado == "Anulada")
             {
 
-               
+
                 ojos_linea = true;
 
                 PreReservasReservasAnulasOtraConvocatoria(NifSolictenteImnserso.Trim(), Expediente);
@@ -4055,15 +4071,15 @@ namespace LeerFicheroTermalismo
                     fichero_advertencias = fichero_advertencias.Substring(0, 251);
                 }
 
-               sql = "Insert into [Hoja1$] (" + CAMPOS + ") values('" + NifHuespedAci.Trim() + "','" + formatearnif(NifSolictenteImnserso.Trim()) + "','" + nif_acomp_Aci.Trim() + "','" + formatearnif(nif_acomp_imserso.Trim()) + "','" + Expediente.Trim() + "','" + Tabla.Trim() + "','" + IdRererva.Trim() + "','" + numeroadultos.Trim() + "','" + AgenciaBalneario.Trim() + "','" + estado.Trim() + "','" + FechaAci.ToString("dd/MM/yyyy") + "','" + FechaImserso.ToString("dd/MM/yyyy") + "','" + plazassolicitadas + "'," + diasestancia.Trim() + ",'" + tipoturno + "','" + TIPO_ADVERTENCIA + "','" + fichero_advertencias + "')";
-               
+                sql = "Insert into [Hoja1$] (" + CAMPOS + ") values('" + NifHuespedAci.Trim() + "','" + formatearnif(NifSolictenteImnserso.Trim()) + "','" + nif_acomp_Aci.Trim() + "','" + formatearnif(nif_acomp_imserso.Trim()) + "','" + Expediente.Trim() + "','" + Tabla.Trim() + "','" + IdRererva.Trim() + "','" + numeroadultos.Trim() + "','" + AgenciaBalneario.Trim() + "','" + estado.Trim() + "','" + FechaAci.ToString("dd/MM/yyyy") + "','" + FechaImserso.ToString("dd/MM/yyyy") + "','" + plazassolicitadas + "'," + diasestancia.Trim() + ",'" + tipoturno + "','" + TIPO_ADVERTENCIA + "','" + fichero_advertencias + "')";
+
                 if (!ok_prereserva)
-               {
-                   myCommand.CommandText = sql;
-                   myCommand.ExecuteNonQuery();
+                {
+                    myCommand.CommandText = sql;
+                    myCommand.ExecuteNonQuery();
 
 
-               }
+                }
 
 
             }
@@ -4085,11 +4101,11 @@ namespace LeerFicheroTermalismo
 
                 TIPO_ADVERTENCIA = "PreReserva en NO";
                 sql = "Insert into [Hoja1$] (" + CAMPOS + ") values('" + NifHuespedAci.Trim() + "','" + formatearnif(NifSolictenteImnserso.Trim()) + "','" + nif_acomp_Aci.Trim() + "','" + formatearnif(nif_acomp_imserso.Trim()) + "','" + Expediente.Trim() + "','" + Tabla.Trim() + "','" + IdRererva.Trim() + "','" + numeroadultos.Trim() + "','" + AgenciaBalneario.Trim() + "','" + estado.Trim() + "','" + FechaAci.ToString("dd/MM/yyyy") + "','" + FechaImserso.ToString("dd/MM/yyyy") + "','" + plazassolicitadas + "'," + diasestancia.Trim() + ",'" + tipoturno + "','" + TIPO_ADVERTENCIA + "','" + fichero_advertencias + "')";
-               
-                
+
+
                 myCommand.CommandText = sql;
                 myCommand.ExecuteNonQuery();
-               // MyConnection.Close();
+                // MyConnection.Close();
 
 
             }
@@ -4418,20 +4434,20 @@ namespace LeerFicheroTermalismo
 
             /*Obtenemos el id del ultimo contador*/
 
-            
-           
+
+
 
             if (!File.Exists(curFile))
             {
 
 
                 Excel.Application xlApp = new Microsoft.Office.Interop.Excel.Application();
-                
-                
-               
-               curFile = textBox1.Text + @"\AdvertenciasTV_" + Convert.ToString(anyofichero) + "\\Advertencias_" + fecha_actual_strg + ".xls";
 
-                
+
+
+                curFile = textBox1.Text + @"\AdvertenciasTV_" + Convert.ToString(anyofichero) + "\\Advertencias_" + fecha_actual_strg + ".xls";
+
+
 
                 Excel.Workbook xlWorkBook;
                 Excel.Worksheet xlWorkSheet;
@@ -4482,9 +4498,9 @@ namespace LeerFicheroTermalismo
 
 
 
-            
+
             tabla_existe_registro_contratos = this.misfuncionesBDExpedientes.obtenerDatable("SELECT  sietedias FROM contratos_imserso WHERE sietedias <>''  GROUP BY  sietedias ");
-            
+
 
 
 
@@ -4598,46 +4614,46 @@ namespace LeerFicheroTermalismo
             foreach (DataRow dr in tabla_existe_registro.Rows)
             {
 
-               
 
 
-                    fichero_advertenciasclientes = "OJO ----> Exite una Reserva " + Convert.ToString(dr["RES_GUID"]) + " --> " + Convert.ToString(dr["hue_nif_str"]) + "  " + Convert.ToString(dr["hue_des_str"]);
-                    entro_reserva_cliente = true;
 
-                    switch (Convert.ToString(dr["res_est_int"]))
-                    {
-                        case "0":
-                            estado = "RESERVA";
+                fichero_advertenciasclientes = "OJO ----> Exite una Reserva " + Convert.ToString(dr["RES_GUID"]) + " --> " + Convert.ToString(dr["hue_nif_str"]) + "  " + Convert.ToString(dr["hue_des_str"]);
+                entro_reserva_cliente = true;
 
-                            break;
-                        case "2":
-                            estado = "Checkin/Checkout";
-                            break;
-                        case "4":
-                            estado = "ANUALADA";
-                            break;
-                    }
+                switch (Convert.ToString(dr["res_est_int"]))
+                {
+                    case "0":
+                        estado = "RESERVA";
 
-                    //TIPO_ADVERTENCIA = "Existe Reserva";
-                    //sql = "Insert into [Hoja1$] (" + CAMPOS_excel_fichero + ") values('" + Convert.ToString(dr["hue_nif_str"]) + "','" + Convert.ToString(dr["hue_des_str"]) + "','RESERVA','" + Convert.ToString(dr["RES_GUID"]) + "','" + Convert.ToString(dr["res_spe_adu_int"]) + "','" + Convert.ToString(dr["age_nom_str"]) + "','" + Convert.ToString(estado) + "','" + Convert.ToDateTime(dr["res_ent_dat"]).ToString("dd/MM/yyyy") + "','" + Convert.ToString(dr["dias"]) + "'";
-                    //sql = "Insert into [Hoja1$] (" + CAMPOS_excel_fichero + ") values('" + Convert.ToString(dr["hue_nif_str"]) + "','','','','','RESERVA','" + Convert.ToString(dr["RES_GUID"]) + "','" + Convert.ToString(dr["res_spe_adu_int"]) + "','" + Convert.ToString(dr["age_nom_str"]) + "','" + Convert.ToString(estado) + "','" + Convert.ToDateTime(dr["res_ent_dat"]).ToString("dd/MM/yyyy") + "','','','" + Convert.ToString(dr["dias"]) + "','','" + obtener_balneario_edificio(this.id_balneario_seleccionado.ToString(), Convert.ToString(dr["EDI_GUID"])) + "','" + Convert.ToString(dr["edi_des_str"]) + "'";
-                    sql = "Insert into [Hoja1$] (" + CAMPOS_excel_fichero + ") values('" + Convert.ToString(dr["hue_nif_str"]) + "','','','','" + Convert.ToString(dr["res_DR_bon_str"]) + "','RESERVA','" + Convert.ToString(dr["RES_GUID"]) + "','" + Convert.ToString(dr["res_spe_adu_int"]) + "','" + Convert.ToString(estado) + "','" + Convert.ToDateTime(dr["res_ent_dat"]).ToString("dd/MM/yyyy") + "','" + this.destino_FINAL + "','" + Convert.ToString(dr["edi_des_str"]) + "'";
+                        break;
+                    case "2":
+                        estado = "Checkin/Checkout";
+                        break;
+                    case "4":
+                        estado = "ANUALADA";
+                        break;
+                }
 
-                    for (int i_h = 13; i_h < 22; i_h++)
-                    {
+                //TIPO_ADVERTENCIA = "Existe Reserva";
+                //sql = "Insert into [Hoja1$] (" + CAMPOS_excel_fichero + ") values('" + Convert.ToString(dr["hue_nif_str"]) + "','" + Convert.ToString(dr["hue_des_str"]) + "','RESERVA','" + Convert.ToString(dr["RES_GUID"]) + "','" + Convert.ToString(dr["res_spe_adu_int"]) + "','" + Convert.ToString(dr["age_nom_str"]) + "','" + Convert.ToString(estado) + "','" + Convert.ToDateTime(dr["res_ent_dat"]).ToString("dd/MM/yyyy") + "','" + Convert.ToString(dr["dias"]) + "'";
+                //sql = "Insert into [Hoja1$] (" + CAMPOS_excel_fichero + ") values('" + Convert.ToString(dr["hue_nif_str"]) + "','','','','','RESERVA','" + Convert.ToString(dr["RES_GUID"]) + "','" + Convert.ToString(dr["res_spe_adu_int"]) + "','" + Convert.ToString(dr["age_nom_str"]) + "','" + Convert.ToString(estado) + "','" + Convert.ToDateTime(dr["res_ent_dat"]).ToString("dd/MM/yyyy") + "','','','" + Convert.ToString(dr["dias"]) + "','','" + obtener_balneario_edificio(this.id_balneario_seleccionado.ToString(), Convert.ToString(dr["EDI_GUID"])) + "','" + Convert.ToString(dr["edi_des_str"]) + "'";
+                sql = "Insert into [Hoja1$] (" + CAMPOS_excel_fichero + ") values('" + Convert.ToString(dr["hue_nif_str"]) + "','','','','" + Convert.ToString(dr["res_DR_bon_str"]) + "','RESERVA','" + Convert.ToString(dr["RES_GUID"]) + "','" + Convert.ToString(dr["res_spe_adu_int"]) + "','" + Convert.ToString(estado) + "','" + Convert.ToDateTime(dr["res_ent_dat"]).ToString("dd/MM/yyyy") + "','" + this.destino_FINAL + "','" + Convert.ToString(dr["edi_des_str"]) + "'";
 
-
-                        sql += ",''";
-
-                    }
-
-                    sql += ")";
-
-                    myCommand.CommandText = sql;
-                    myCommand.ExecuteNonQuery();
+                for (int i_h = 13; i_h < 22; i_h++)
+                {
 
 
-                
+                    sql += ",''";
+
+                }
+
+                sql += ")";
+
+                myCommand.CommandText = sql;
+                myCommand.ExecuteNonQuery();
+
+
+
 
 
             }
@@ -4669,11 +4685,11 @@ namespace LeerFicheroTermalismo
             /*Obtenemos el id del ultimo contador*/
 
 
-          
+
 
             if (!File.Exists(curFile))
             {
-                
+
 
                 Excel.Application xlApp = new Microsoft.Office.Interop.Excel.Application();
 
@@ -4806,9 +4822,9 @@ namespace LeerFicheroTermalismo
 
 
 
-           // string curFile = textBox1.Text + @"\Advertencias" + mesfichero + "_" + anyofichero + "\\AvertenciasClientes_" + fecha_actual_strg + ".xls";
+            // string curFile = textBox1.Text + @"\Advertencias" + mesfichero + "_" + anyofichero + "\\AvertenciasClientes_" + fecha_actual_strg + ".xls";
 
-           
+
 
             System.Data.OleDb.OleDbConnection MyConnection;
             System.Data.OleDb.OleDbCommand myCommand = new System.Data.OleDb.OleDbCommand();
@@ -4850,10 +4866,10 @@ namespace LeerFicheroTermalismo
 
             /*Obtenemos el id del ultimo contador*/
             tabla_existe_registro = this.misfuncionesBD.obtenerDatable(sql_r);
-            
 
 
-          
+
+
             string TIPO_ADVERTENCIA = "";
             string estado = "";
 
@@ -4864,39 +4880,40 @@ namespace LeerFicheroTermalismo
                 {
 
 
-                        fichero_advertenciasclientes = "OJO ----> Exite una Reserva " + Convert.ToString(dr["RES_GUID"]) + " --> " + Convert.ToString(dr["hue_nif_str"]) + "  " + Convert.ToString(dr["hue_des_str"]);
-                        entro_reserva_cliente = true;
+                    fichero_advertenciasclientes = "OJO ----> Exite una Reserva " + Convert.ToString(dr["RES_GUID"]) + " --> " + Convert.ToString(dr["hue_nif_str"]) + "  " + Convert.ToString(dr["hue_des_str"]);
+                    entro_reserva_cliente = true;
 
-                        switch (Convert.ToString(dr["res_est_int"]))
-                        {
-                            case "0":
-                                estado = "RESERVA";
+                    switch (Convert.ToString(dr["res_est_int"]))
+                    {
+                        case "0":
+                            estado = "RESERVA";
 
-                                break;
-                            case "2":
-                                estado = "Checkin/Checkout";
-                                break;
-                            case "4":
-                                estado = "ANUALADA";
-                                break;
-                        }
+                            break;
+                        case "2":
+                            estado = "Checkin/Checkout";
+                            break;
+                        case "4":
+                            estado = "ANUALADA";
+                            break;
+                    }
 
-                        //TIPO_ADVERTENCIA = "Existe Reserva";
-                        //sql = "Insert into [Hoja1$] (" + CAMPOS_excel_fichero + ") values('" + Convert.ToString(dr["hue_nif_str"]) + "','" + Convert.ToString(dr["hue_des_str"]) + "','RESERVA','" + Convert.ToString(dr["RES_GUID"]) + "','" + Convert.ToString(dr["res_spe_adu_int"]) + "','" + Convert.ToString(dr["age_nom_str"]) + "','" + Convert.ToString(estado) + "','" + Convert.ToDateTime(dr["res_ent_dat"]).ToString("dd/MM/yyyy") + "','" + Convert.ToString(dr["dias"]) + "'";
-                        sql = "Insert into [Hoja1$] (" + CAMPOS_excel_fichero + ") values('" + Convert.ToString(dr["hue_nif_str"]) + "','','','','','RESERVA','" + Convert.ToString(dr["RES_GUID"]) + "','" + Convert.ToString(dr["res_spe_adu_int"]) + "','" + Convert.ToString(dr["age_nom_str"]) + "','" + Convert.ToString(estado) + "','" + Convert.ToDateTime(dr["res_ent_dat"]).ToString("dd/MM/yyyy") + "','','','" + Convert.ToString(dr["dias"]) + "','','" + obtener_balneario_edificio(this.id_balneario_seleccionado.ToString(), Convert.ToString(dr["EDI_GUID"])) + "','" + Convert.ToString(dr["edi_des_str"]) + "'";
-
-
-                        for (int i_h = 16; i_h < 23; i_h++) {
+                    //TIPO_ADVERTENCIA = "Existe Reserva";
+                    //sql = "Insert into [Hoja1$] (" + CAMPOS_excel_fichero + ") values('" + Convert.ToString(dr["hue_nif_str"]) + "','" + Convert.ToString(dr["hue_des_str"]) + "','RESERVA','" + Convert.ToString(dr["RES_GUID"]) + "','" + Convert.ToString(dr["res_spe_adu_int"]) + "','" + Convert.ToString(dr["age_nom_str"]) + "','" + Convert.ToString(estado) + "','" + Convert.ToDateTime(dr["res_ent_dat"]).ToString("dd/MM/yyyy") + "','" + Convert.ToString(dr["dias"]) + "'";
+                    sql = "Insert into [Hoja1$] (" + CAMPOS_excel_fichero + ") values('" + Convert.ToString(dr["hue_nif_str"]) + "','','','','','RESERVA','" + Convert.ToString(dr["RES_GUID"]) + "','" + Convert.ToString(dr["res_spe_adu_int"]) + "','" + Convert.ToString(dr["age_nom_str"]) + "','" + Convert.ToString(estado) + "','" + Convert.ToDateTime(dr["res_ent_dat"]).ToString("dd/MM/yyyy") + "','','','" + Convert.ToString(dr["dias"]) + "','','" + obtener_balneario_edificio(this.id_balneario_seleccionado.ToString(), Convert.ToString(dr["EDI_GUID"])) + "','" + Convert.ToString(dr["edi_des_str"]) + "'";
 
 
-                            sql += ",''";
-                        
-                        }
+                    for (int i_h = 16; i_h < 23; i_h++)
+                    {
 
-                        sql += ")";
-                    
-                        myCommand.CommandText = sql;
-                        myCommand.ExecuteNonQuery();
+
+                        sql += ",''";
+
+                    }
+
+                    sql += ")";
+
+                    myCommand.CommandText = sql;
+                    myCommand.ExecuteNonQuery();
 
 
                 }
@@ -5014,7 +5031,7 @@ namespace LeerFicheroTermalismo
 
 
 
-             string mesfichero = Convert.ToString(mes);
+            string mesfichero = Convert.ToString(mes);
             string anyofichero = Convert.ToString(year_fichero);
 
             Excel.Application xlApp = new Microsoft.Office.Interop.Excel.Application();
@@ -5034,7 +5051,7 @@ namespace LeerFicheroTermalismo
 
 
 
-           
+
 
             if (!File.Exists(curFile))
             {
@@ -5088,16 +5105,16 @@ namespace LeerFicheroTermalismo
             MyConnection.Open();
             myCommand.Connection = MyConnection;
 
-            
-            
-            
-            
-            
-            
-            
-            
-            
-           
+
+
+
+
+
+
+
+
+
+
 
 
             //Reservas
@@ -5149,7 +5166,7 @@ namespace LeerFicheroTermalismo
                     if (System.Configuration.ConfigurationSettings.AppSettings["prereservas_fichero_clientes"] == "1")
                     {
 
-                        fichero_advertenciasclientes = "OJO ----> Exite una Reserva " + Convert.ToString(dr["RES_GUID"]) + " --> " + Convert.ToString(dr["hue_nif_str"]) + "  " + Convert.ToString(dr["hue_des_str"]) ;
+                        fichero_advertenciasclientes = "OJO ----> Exite una Reserva " + Convert.ToString(dr["RES_GUID"]) + " --> " + Convert.ToString(dr["hue_nif_str"]) + "  " + Convert.ToString(dr["hue_des_str"]);
                         entro_reserva_cliente = true;
 
                         switch (Convert.ToString(dr["res_est_int"]))
@@ -5157,20 +5174,20 @@ namespace LeerFicheroTermalismo
                             case "0":
                                 estado = "RESERVA";
 
-                            break;
+                                break;
                             case "2":
                                 estado = "CHECKIN";
-                            break;
+                                break;
                             case "4":
                                 estado = "ANUALADA";
-                            break;
+                                break;
                         }
 
                         TIPO_ADVERTENCIA = "Existe Reserva";
                         sql = "Insert into [Hoja1$] (" + CAMPOS + ") values('" + Convert.ToString(dr["hue_nif_str"]) + "','" + Convert.ToString(dr["hue_des_str"]) + "','RESERVA','" + Convert.ToString(dr["RES_GUID"]) + "','" + Convert.ToString(dr["res_spe_adu_int"]) + "','" + Convert.ToString(dr["age_nom_str"]) + "','" + Convert.ToString(estado) + "','" + Convert.ToDateTime(dr["res_ent_dat"]).ToString("dd/MM/yyyy") + "','" + Convert.ToString(dr["dias"]) + "','" + TIPO_ADVERTENCIA + "','" + fichero_advertenciasclientes + "')";
                         myCommand.CommandText = sql;
                         myCommand.ExecuteNonQuery();
-                       
+
 
                     }
 
@@ -5247,14 +5264,14 @@ namespace LeerFicheroTermalismo
                     if (System.Configuration.ConfigurationSettings.AppSettings["prereservas_fichero_clientes"] == "1" && entro_reserva_cliente == false)
                     {
 
-                        fichero_advertenciasclientes = "OJO ----> Exite una PreReserva " + Convert.ToString(dr["RES_GUID"]) + "  en estado " + Convert.ToString(dr["estado"]) + "  --> " + Convert.ToString(dr["hue_nif_str"]) + "  " + Convert.ToString(dr["hue_des_str"]) ;
+                        fichero_advertenciasclientes = "OJO ----> Exite una PreReserva " + Convert.ToString(dr["RES_GUID"]) + "  en estado " + Convert.ToString(dr["estado"]) + "  --> " + Convert.ToString(dr["hue_nif_str"]) + "  " + Convert.ToString(dr["hue_des_str"]);
 
 
                         TIPO_ADVERTENCIA = "Existe PreReserva";
                         sql = "Insert into [Hoja1$] (" + CAMPOS + ") values('" + Convert.ToString(dr["hue_nif_str"]) + "','" + Convert.ToString(dr["hue_des_str"]) + "','RESERVA','" + Convert.ToString(dr["RES_GUID"]) + "','" + Convert.ToString(dr["res_spe_adu_int"]) + "','" + Convert.ToString(dr["age_nom_str"]) + "','" + Convert.ToString(dr["estado"]) + "','" + Convert.ToDateTime(dr["res_ent_dat"]).ToString("dd/MM/yyyy") + "','" + Convert.ToString(dr["dias"]) + "','" + TIPO_ADVERTENCIA + "','" + fichero_advertenciasclientes + "')";
                         myCommand.CommandText = sql;
                         myCommand.ExecuteNonQuery();
-                       
+
 
 
                     }
@@ -5461,7 +5478,7 @@ namespace LeerFicheroTermalismo
 
             string nif_sin_ceros = "";
             string expediente = "";
-          char[] arr = new char[] { '0' };
+            char[] arr = new char[] { '0' };
             nif_sin_ceros = nif.TrimStart(arr);
             ArrayList expediente_estado = new ArrayList();
 
@@ -5513,7 +5530,7 @@ namespace LeerFicheroTermalismo
 
 
             string nif_sin_ceros = "";
-          string expediente = "";
+            string expediente = "";
             char[] arr = new char[] { '0' };
             nif_sin_ceros = nif.TrimStart(arr);
             ArrayList expediente_estado = new ArrayList();
@@ -5972,7 +5989,7 @@ namespace LeerFicheroTermalismo
             string sql = "SELECT [destino]  FROM [config_balneario_prereservas] INNER JOIN edificios_balnearios ON edificios_balnearios.id_balneario=config_balneario_prereservas.id WHERE id_balneario='" + id_balneario + "' AND edificios_balnearios.EDI_GUID='" + EDI_GUID + "' ORDER BY balneario ASC";
             tabla_existe_registro = this.misfuncionesBDExpedientes.obtenerDatable(sql);
 
- 
+
 
 
 
@@ -6415,49 +6432,49 @@ namespace LeerFicheroTermalismo
 
             }
 
-           /* DataTable mitable = new DataTable();
+            /* DataTable mitable = new DataTable();
 
-            ArrayList ArrylistContact = new ArrayList();
-            string sql_c = "SELECT first_name,last_name,primary_address_street,primary_address_city,primary_address_state,primary_address_postalcode,birthdate FROM  contacts WHERE id_nif='" + hue_nif_str +"'";
-            MySqlDataAdapter mda = new MySqlDataAdapter(sql_c, this.msqlConnection);
-            DataSet ds = new DataSet();
-            mda.Fill(ds);
-            mitable = ds.Tables[0];
-            entro_actulizar = false;
-            foreach (System.Data.DataRow dr in mitable.Rows)
-            {
-
-
-
-
-                if (Convert.ToString(dr["birthdate"]).Length <= 2)
-                {
-
-
-                    campos_actulizar = "birthdate='" + birthdate + "'";
-                    entro_actulizar = true;
+             ArrayList ArrylistContact = new ArrayList();
+             string sql_c = "SELECT first_name,last_name,primary_address_street,primary_address_city,primary_address_state,primary_address_postalcode,birthdate FROM  contacts WHERE id_nif='" + hue_nif_str +"'";
+             MySqlDataAdapter mda = new MySqlDataAdapter(sql_c, this.msqlConnection);
+             DataSet ds = new DataSet();
+             mda.Fill(ds);
+             mitable = ds.Tables[0];
+             entro_actulizar = false;
+             foreach (System.Data.DataRow dr in mitable.Rows)
+             {
 
 
 
 
-                }
+                 if (Convert.ToString(dr["birthdate"]).Length <= 2)
+                 {
 
-                if (entro_actulizar == true)
-                {
 
-                    MySqlCommand cmd = new MySqlCommand();
+                     campos_actulizar = "birthdate='" + birthdate + "'";
+                     entro_actulizar = true;
 
-                    cmd.Connection = this.msqlConnection;
-                    string sql_up = "UPDATE contacts SET birthdate = '" + birthdate + "' WHERE id_nif = '" + hue_nif_str + "'";
-                    cmd.CommandText = sql_up;
-                    //int numRowsUpdated = cmd.ExecuteNonQuery(); 
-                
-                }
-                
 
-               
 
-            }*/
+
+                 }
+
+                 if (entro_actulizar == true)
+                 {
+
+                     MySqlCommand cmd = new MySqlCommand();
+
+                     cmd.Connection = this.msqlConnection;
+                     string sql_up = "UPDATE contacts SET birthdate = '" + birthdate + "' WHERE id_nif = '" + hue_nif_str + "'";
+                     cmd.CommandText = sql_up;
+                     //int numRowsUpdated = cmd.ExecuteNonQuery(); 
+
+                 }
+
+
+
+
+             }*/
 
 
 
@@ -6589,12 +6606,13 @@ namespace LeerFicheroTermalismo
 
                     tipo_SPE_GUID = Convert.ToString(dr["SPE_GUID_TV"]);
                 }
-                else {
+                else
+                {
 
 
                     tipo_SPE_GUID = Convert.ToString(dr["SPE_GUID"]);
                 }
-                
+
 
 
             }
@@ -7106,7 +7124,7 @@ namespace LeerFicheroTermalismo
 
                     direc_final_dos = split_direc[0].Replace("    ", "#");
 
-                    //MessageBox.Show(direc_final_dos);
+                    MessageBox.Show(direc_final_dos);
 
                     split_direc_uno = direc_final_dos.Split(new Char[] { '#' });
 
@@ -7318,10 +7336,11 @@ namespace LeerFicheroTermalismo
 
 
 
-         public bool CheckBird(string nif) { 
-        
-        
-           this.msqlConnection = new MySql.Data.MySqlClient.MySqlConnection("server=192.168.23.233;user id=admin_bd;Password=DiodeDiode2019;database=crm;persist security info=False");
+        public bool CheckBird(string nif)
+        {
+
+
+            this.msqlConnection = new MySql.Data.MySqlClient.MySqlConnection("server=192.168.23.233;user id=admin_bd;Password=DiodeDiode2019;database=crm;persist security info=False");
             DataTable mitable = new DataTable();
 
             ArrayList ArrylistContact = new ArrayList();
@@ -7336,7 +7355,7 @@ namespace LeerFicheroTermalismo
                 mda.Fill(ds);
                 mitable = ds.Tables[0];
 
-               
+
 
                 foreach (System.Data.DataRow dr in mitable.Rows)
                 {
@@ -7368,10 +7387,11 @@ namespace LeerFicheroTermalismo
 
                 }
             }
-            catch {
+            catch
+            {
 
                 birthdate = false;
-            
+
             }
 
 
@@ -7379,12 +7399,29 @@ namespace LeerFicheroTermalismo
             return birthdate;
         }
 
-         private void comboBox1_SelectedIndexChanged(object sender, EventArgs e)
-         {
+        private void comboBox1_SelectedIndexChanged(object sender, EventArgs e)
+        {
 
-         }
+        }
 
+        private void button7_Click(object sender, EventArgs e)
+        {
+           this.textBox1.Text= new Utils().Encrypt(ConfigurationManager.AppSettings["ConnectionString"], "balneario");
+        }
 
+        private void textBox1_TextChanged(object sender, EventArgs e)
+        {
+            if (textBox1.Text == "balneario")
+            {
+
+                Encriptar.Visible = true;
+            }
+            else {
+
+                Encriptar.Visible = false;
+            }
+
+        }
     }
 
 

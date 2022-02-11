@@ -102,6 +102,7 @@
             this.tabPage2 = new System.Windows.Forms.TabPage();
             this.tabPage3 = new System.Windows.Forms.TabPage();
             this.checkBox5 = new System.Windows.Forms.CheckBox();
+            this.Encriptar = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView2)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView3)).BeginInit();
@@ -149,6 +150,7 @@
             this.textBox1.Name = "textBox1";
             this.textBox1.Size = new System.Drawing.Size(236, 20);
             this.textBox1.TabIndex = 3;
+            this.textBox1.TextChanged += new System.EventHandler(this.textBox1_TextChanged);
             // 
             // label2
             // 
@@ -736,12 +738,25 @@
             this.checkBox5.UseVisualStyleBackColor = true;
             this.checkBox5.Visible = false;
             // 
+            // Encriptar
+            // 
+            this.Encriptar.ForeColor = System.Drawing.Color.Black;
+            this.Encriptar.Location = new System.Drawing.Point(711, 92);
+            this.Encriptar.Name = "Encriptar";
+            this.Encriptar.Size = new System.Drawing.Size(160, 23);
+            this.Encriptar.TabIndex = 3;
+            this.Encriptar.Text = "Encriptar";
+            this.Encriptar.UseVisualStyleBackColor = true;
+            this.Encriptar.Visible = false;
+            this.Encriptar.Click += new System.EventHandler(this.button7_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.SeaGreen;
             this.ClientSize = new System.Drawing.Size(1040, 699);
+            this.Controls.Add(this.Encriptar);
             this.Controls.Add(this.checkBox5);
             this.Controls.Add(this.tabControl1);
             this.Controls.Add(this.checkBox4);
@@ -775,7 +790,7 @@
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MaximizeBox = false;
             this.Name = "Form1";
-            this.Text = " Lectura de fichero Termalismo 2.0.0";
+            this.Text = " Lectura de fichero Termalismo 2.0.1";
             this.Load += new System.EventHandler(this.Form1_Load);
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView2)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).EndInit();
@@ -866,6 +881,7 @@
         private System.Windows.Forms.TabPage tabPage2;
         private System.Windows.Forms.TabPage tabPage3;
         private System.Windows.Forms.CheckBox checkBox5;
+        private System.Windows.Forms.Button Encriptar;
     }
 }
 
