@@ -91,10 +91,10 @@ namespace LeerFicheroTermalismo
 
 
 
-           
 
-       
 
+
+     
 
             this.Top = (Screen.PrimaryScreen.WorkingArea.Height - this.Height) / 2;
             this.Left = (Screen.PrimaryScreen.WorkingArea.Width - this.Width) / 2;
