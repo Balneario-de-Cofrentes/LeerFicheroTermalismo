@@ -12,6 +12,7 @@ using MySql.Data.MySqlClient;
 using System.Runtime.InteropServices;
 using Excel = Microsoft.Office.Interop.Excel;
 using Sentry;
+using System.Net;
 
 namespace LeerFicheroTermalismo
 {
@@ -6112,17 +6113,27 @@ namespace LeerFicheroTermalismo
 
         }
 
-
+        [Obsolete]
         public void llenar_combo_balnearios()
         {
 
+            string hostName = Dns.GetHostName(); 
+            string myIP = Dns.GetHostByName(hostName).AddressList[0].ToString();
+          
+
 
             DataTable tabla_existe_combo = new DataTable();
+            String sql = "SELECT [id],[balneario] ,[destino],[conexion] ,[agencia],[tipo_habitacion] FROM [config_balneario_prereservas] WHERE id IN (#ids#) ORDER BY [id] ASC";
 
-            tabla_existe_combo = this.misfuncionesBDExpedientes.obtenerDatable("SELECT [id],[balneario] ,[destino],[conexion] ,[agencia],[tipo_habitacion] FROM [config_balneario_prereservas] WHERE id IN (1,4,5,7) ORDER BY [id] ASC");
+
+            sql = sql.Replace("#ids#", ConfigurationManager.AppSettings["balnearios"]);
+
+
+            tabla_existe_combo = this.misfuncionesBDExpedientes.obtenerDatable(sql);
+
+
 
             this.comboBox1.DataSource = tabla_existe_combo;
-            //se especifica el campo de la tabla
             this.comboBox1.ValueMember = "id";
             this.comboBox1.DisplayMember = "destino";
 
