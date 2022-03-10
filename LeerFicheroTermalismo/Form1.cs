@@ -6190,7 +6190,7 @@ namespace LeerFicheroTermalismo
         {
 
             //MessageBox.Show("hola");
-            string sql = "SELECT res_fec_dat,res_DR_obs_str,PresReservas.HUE_GUID,res_spe_adu_int,res_ent_dat, epr_des_str,RES_GUID,res_sal_dat,hue_des_str FROM PresReservas  INNER JOIN PreReservaEstados ON PreReservaEstados.epr_GUID=PresReservas.epr_GUID  INNER JOIN Huespedes ON Huespedes.hue_GUID=PresReservas.hue_GUID WHERE epr_des_str='Pendiente' AND  MONTH(res_ent_dat)=" + mes;
+            string sql = "SELECT res_fec_dat,res_DR_obs_str,PresReservas.HUE_GUID,res_spe_adu_int,res_ent_dat, epr_des_str,RES_GUID,res_sal_dat,hue_des_str FROM PresReservas  INNER JOIN PreReservaEstados ON PreReservaEstados.epr_GUID=PresReservas.epr_GUID  INNER JOIN Huespedes ON Huespedes.hue_GUID=PresReservas.hue_GUID WHERE epr_des_str='Pendiente' AND YEAR(res_ent_dat)=YEAR(getdate()) AND  MONTH(res_ent_dat)=" + mes;
 
             DataTable datetablependientes = new DataTable();
 
@@ -6322,7 +6322,7 @@ namespace LeerFicheroTermalismo
 
 
 
-                sql = "SELECT  res_fec_dat,res_DR_obs_str,PresReservas.HUE_GUID,res_spe_adu_int,res_ent_dat, epr_des_str,RES_GUID,res_sal_dat,hue_des_str FROM PresReservas  INNER JOIN PreReservaEstados ON PreReservaEstados.epr_GUID=PresReservas.epr_GUID  INNER JOIN Huespedes ON Huespedes.hue_GUID=PresReservas.hue_GUID WHERE PresReservas.hue_GUID IN (" + repetidas_pre + ") AND MONTH(res_ent_dat)='" + mes + "' ORDER BY PresReservas.hue_GUID ASC ";
+                sql = "SELECT  res_fec_dat,res_DR_obs_str,PresReservas.HUE_GUID,res_spe_adu_int,res_ent_dat, epr_des_str,RES_GUID,res_sal_dat,hue_des_str FROM PresReservas  INNER JOIN PreReservaEstados ON PreReservaEstados.epr_GUID=PresReservas.epr_GUID  INNER JOIN Huespedes ON Huespedes.hue_GUID=PresReservas.hue_GUID WHERE  YEAR(res_ent_dat)=YEAR(getdate()) AND PresReservas.hue_GUID IN (" + repetidas_pre + ") AND MONTH(res_ent_dat)='" + mes + "' ORDER BY PresReservas.hue_GUID ASC ";
                 datetablependientes = this.misfuncionesBD.obtenerDatable(sql);
 
                 int contador_lineas_gid = 1;
@@ -7431,6 +7431,11 @@ namespace LeerFicheroTermalismo
 
                 Encriptar.Visible = false;
             }
+
+        }
+
+        private void dataGridView2_CellContentClick(object sender, DataGridViewCellEventArgs e)
+        {
 
         }
     }
