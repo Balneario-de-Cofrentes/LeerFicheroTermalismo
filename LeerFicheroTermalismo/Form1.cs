@@ -580,13 +580,6 @@ namespace LeerFicheroTermalismo
 
 
 
-
-
-
-                //MessageBox.Show(IdSolicitanteAci + "---" + IdAcompAci);
-
-                //Todos los ok para intersan estn bien
-
                 if (InsertoPrereserva == true)
                 {
 
@@ -779,8 +772,11 @@ namespace LeerFicheroTermalismo
                 this.readFile();
             }
             catch (Exception err)
+
             {
+                
                 SentrySdk.CaptureException(err);
+                MessageBox.Show(err.ToString());
 
             }
 
@@ -872,19 +868,7 @@ namespace LeerFicheroTermalismo
 
 
                         LeerDatosExcel(fichero);
-                        try
-                        {
-
-
-                        }
-                        catch
-                        {
-
-
-                            MessageBox.Show("Error de lectura de fichero");
-
-
-                        }
+                       
 
 
                         //Fin en el caso de que se un excel
@@ -2261,13 +2245,7 @@ namespace LeerFicheroTermalismo
             if (this.checkBox3.Checked)
             {
 
-                //sql = "SELECT res_DR_bon_str,DateDiff(day, res_ent_dat, res_sal_dat) as DiferenciaDias,res_spe_adu_int,[PresReservas].RES_GUID,HuespedK.HUE_GUID,PresReservaAcompanantes.HUE_GUID as acomp,hue_nif_str,res_ent_dat,PreReservaEstados.epr_des_str as Estado,prr_est_byt FROM PresReservas INNER JOIN  PreReservaEstados ON PreReservaEstados.epr_GUID=PresReservas.epr_GUID INNER JOIN HuespedK ON HuespedK.HUE_GUID = PresReservas.HUE_GUID LEFT  JOIN  PresReservaAcompanantes ON  PresReservaAcompanantes.RES_GUID = PresReservas.RES_GUID     WHERE HuespedK.hue_nif_str='" + Convert.ToString(nif_huesped) + "' AND (res_ent_dat between '" + Convert.ToDateTime("01/01/" + Convert.ToDateTime(VectotConvocatorias[1]).Year).ToString(formato_datetime) + "' AND   '" + Convert.ToDateTime("31/12/" + Convert.ToDateTime(VectotConvocatorias[1]).Year).ToString(formato_datetime) + "' AND  res_DR_bon_str='" + VectorExpedienteAnyo[1] + "' ) ";
-                //sql = "SELECT age_nom_str,res_nal_bln,res_DR_bon_str,DateDiff(day, res_ent_dat, res_sal_dat) as DiferenciaDias,res_spe_adu_int,[Reservas].RES_GUID,HuespedK.HUE_GUID,ReservaAcompanantes.HUE_GUID as acomp,hue_nif_str,res_ent_dat,CASE res_est_int WHEN 0 THEN 'Reserva' WHEN 2 THEN 'Checkin/Checkout' WHEN 3 THEN 'No Show' WHEN 4 THEN 'Anulada' ELSE '' END AS Estado FROM [Reservas] INNER JOIN HuespedK ON HuespedK.HUE_GUID = Reservas.HUE_GUID LEFT  JOIN ReservaAcompanantes ON  ReservaAcompanantes.RES_GUID = Reservas.RES_GUID INNER JOIN Agencias ON  Agencias.AGE_GUID = Reservas.AGE_GUID    WHERE  Reservas.AGE_GUID='" + this.agencia_balneario + "'  AND res_est_int NOT IN (5) AND HuespedK.hue_nif_str='" + Convert.ToString(nif_huesped) + "' AND  (res_ent_dat between '" + Convert.ToDateTime("01/01/" + Convert.ToDateTime(VectotConvocatorias[1]).Year).ToString(formato_datetime) + "' AND   '" + Convert.ToDateTime("01/12/" + Convert.ToDateTime(VectotConvocatorias[1]).Year).ToString(formato_datetime) + "' AND  res_DR_bon_str='" + VectorExpedienteAnyo[1] + "' )  ";
-                //sql = "SELECT age_nom_str,res_nal_bln,res_DR_bon_str,DateDiff(day, res_ent_dat, res_sal_dat) as DiferenciaDias,res_spe_adu_int,[Reservas].RES_GUID,HuespedK.HUE_GUID,ReservaAcompanantes.HUE_GUID as acomp,hue_nif_str,res_ent_dat,CASE res_est_int WHEN 0 THEN 'Reserva' WHEN 2 THEN 'Checkin/Checkout' WHEN 3 THEN 'No Show' WHEN 4 THEN 'Anulada' ELSE '' END AS Estado FROM [Reservas] INNER JOIN HuespedK ON HuespedK.HUE_GUID = Reservas.HUE_GUID LEFT  JOIN ReservaAcompanantes ON  ReservaAcompanantes.RES_GUID = Reservas.RES_GUID INNER JOIN Agencias ON  Agencias.AGE_GUID = Reservas.AGE_GUID    WHERE  Reservas.AGE_GUID='" + this.agencia_balneario + "'  AND res_est_int NOT IN (5) AND HuespedK.hue_nif_str='" + Convert.ToString(nif_huesped) + "' AND  (res_ent_dat between '" + Convert.ToDateTime("01/01/" + Convert.ToDateTime(VectotConvocatorias[1]).Year).ToString(formato_datetime) + "' AND   '" + Convert.ToDateTime("01/12/" + Convert.ToDateTime(VectotConvocatorias[1]).Year).ToString(formato_datetime) + "' )  ";
-
-
-                //En funcion del contrato 
-
+           
 
 
 
@@ -2563,9 +2541,11 @@ namespace LeerFicheroTermalismo
             }
             catch (Exception err)
             {
+               
                 SentrySdk.CaptureException(err);
-
+               
                 MessageBox.Show("Se ha producido un error");
+                MessageBox.Show(err.ToString());
                 this.Close();
 
             }
@@ -4608,11 +4588,22 @@ namespace LeerFicheroTermalismo
 
         //Obtner prereservas pendientes
 
-        public void ObtenerPrereservasPendientes(string mes)
+        public void ObtenerPrereservasPendientes(string mes=null)
         {
 
             //MessageBox.Show("hola");
-            string sql = "SELECT res_fec_dat,res_DR_obs_str,PresReservas.HUE_GUID,res_spe_adu_int,res_ent_dat, epr_des_str,RES_GUID,res_sal_dat,hue_des_str FROM PresReservas  INNER JOIN PreReservaEstados ON PreReservaEstados.epr_GUID=PresReservas.epr_GUID  INNER JOIN Huespedes ON Huespedes.hue_GUID=PresReservas.hue_GUID WHERE epr_des_str='Pendiente' AND YEAR(res_ent_dat)=YEAR(getdate()) AND  MONTH(res_ent_dat)=" + mes;
+            string sql = "SELECT res_fec_dat,res_DR_obs_str,PresReservas.HUE_GUID,res_spe_adu_int,res_ent_dat, epr_des_str,RES_GUID,res_sal_dat,hue_des_str FROM PresReservas  INNER JOIN PreReservaEstados ON PreReservaEstados.epr_GUID=PresReservas.epr_GUID  INNER JOIN Huespedes ON Huespedes.hue_GUID=PresReservas.hue_GUID WHERE epr_des_str='Pendiente' AND YEAR(res_ent_dat)=YEAR(getdate()) ";
+
+            if (mes != null)
+            {
+                sql += "  AND MONTH(res_ent_dat)=" + mes;
+            }
+            else {
+
+                sql += "  AND MONTH(res_ent_dat)=MONTH(getdate())";
+
+            }
+            
 
             DataTable datetablependientes = new DataTable();
 
